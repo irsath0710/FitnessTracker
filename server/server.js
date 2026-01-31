@@ -77,8 +77,27 @@ const app = express();
  * cors() middleware adds headers that tell the browser:
  * "It's okay, allow requests from other origins"
  */
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    process.env.CLIENT_URL,
+    // Add your Vercel URL patterns
+].filter(Boolean); // Remove undefined values
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or Postman)
+        if (!origin) return callback(null, true);
+
+        // Check if origin is allowed or matches Vercel pattern
+        if (allowedOrigins.includes(origin) ||
+            origin.endsWith('.vercel.app') ||
+            origin.includes('fitnesstracker')) {
+            return callback(null, true);
+        }
+
+        callback(new Error('Not allowed by CORS'));
+    },
     credentials: true  // Allow cookies to be sent
 }));
 
