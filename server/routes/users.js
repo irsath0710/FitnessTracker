@@ -1,0 +1,214 @@
+/**
+ * ============================================
+ * USER ROUTES
+ * ============================================
+ * 
+ * 📚 LEARNING NOTES:
+ * 
+ * These routes handle user profile management.
+ * All routes here are protected (require authentication).
+ * 
+ * The pattern is:
+ * - Import dependencies
+ * - Create router
+ * - Define routes
+ * - Export router
+ */
+
+const express = require('express');
+const router = express.Router();
+const { body, validationResult } = require('express-validator');
+const User = require('../models/User');
+const Workout = require('../models/Workout');
+const Meal = require('../models/Meal');
+const { protect } = require('../middleware/auth');
+
+/**
+ * @route   PUT /api/users/profile
+ * @desc    Update user profile
+ * @access  Private
+ * 
+ * Used to update body metrics (height, weight, bodyFat, etc.)
+ */
+router.put(
+    '/profile',
+    protect,
+    [
+        body('height').optional().isFloat({ min: 100, max: 250 }),
+        body('weight').optional().isFloat({ min: 30, max: 300 }),
+        body('bodyFat').optional().isFloat({ min: 3, max: 60 }),
+        body('age').optional().isInt({ min: 13, max: 120 })
+    ],
+    async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({
+                    success: false,
+                    errors: errors.array()
+                });
+            }
+
+            // Fields that can be updated
+            const allowedFields = [
+                'height', 'weight', 'age', 'gender', 'bodyFat',
+                'goal', 'dailyCalorieGoal', 'dailyBurnGoal'
+            ];
+
+            // Build update object with only allowed fields
+            const updateData = {};
+            allowedFields.forEach(field => {
+                if (req.body[field] !== undefined) {
+                    updateData[field] = req.body[field];
+                }
+            });
+
+            // Update user
+            const user = await User.findByIdAndUpdate(
+                req.user.id,
+                { $set: updateData },
+                { new: true, runValidators: true }  // Return updated doc, run validators
+            );
+
+            res.json({
+                success: true,
+                message: 'Profile updated successfully',
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    email: user.email,
+                    height: user.height,
+                    weight: user.weight,
+                    age: user.age,
+                    gender: user.gender,
+                    bodyFat: user.bodyFat,
+                    xp: user.xp,
+                    streak: user.streak,
+                    goal: user.goal,
+                    dailyCalorieGoal: user.dailyCalorieGoal,
+                    dailyBurnGoal: user.dailyBurnGoal,
+                    level: user.getLevel()
+                }
+            });
+
+        } catch (error) {
+            console.error('Profile update error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Server error updating profile'
+            });
+        }
+    }
+);
+
+/**
+ * @route   GET /api/users/stats
+ * @desc    Get user statistics and summary
+ * @access  Private
+ * 
+ * Returns aggregated data for the dashboard
+ */
+router.get('/stats', protect, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Get workout summary
+        const workoutSummary = await Workout.getWeeklySummary(userId);
+
+        // Get today's meals
+        const todayMeals = await Meal.getDailySummary(userId);
+
+        // Get weekly meal data for charts
+        const weeklyMealData = await Meal.getWeeklyData(userId);
+
+        // Get recent workouts
+        const recentWorkouts = await Workout.find({ userId })
+            .sort({ date: -1 })
+            .limit(7);
+
+        // Calculate streak status
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const todayWorkout = await Workout.findOne({
+            userId,
+            date: { $gte: today }
+        });
+
+        res.json({
+            success: true,
+            stats: {
+                user: {
+                    xp: req.user.xp,
+                    streak: req.user.streak,
+                    level: req.user.getLevel(),
+                    weight: req.user.weight,
+                    bodyFat: req.user.bodyFat
+                },
+                today: {
+                    caloriesConsumed: todayMeals.totalCalories,
+                    caloriesBurned: recentWorkouts
+                        .filter(w => new Date(w.date) >= today)
+                        .reduce((sum, w) => sum + w.caloriesBurned, 0),
+                    protein: todayMeals.totalProtein,
+                    carbs: todayMeals.totalCarbs,
+                    fats: todayMeals.totalFats,
+                    workoutCompleted: !!todayWorkout
+                },
+                weekly: {
+                    workouts: workoutSummary,
+                    meals: weeklyMealData
+                },
+                recentWorkouts: recentWorkouts.map(w => ({
+                    id: w._id,
+                    type: w.type,
+                    duration: w.duration,
+                    caloriesBurned: w.caloriesBurned,
+                    xpEarned: w.xpEarned,
+                    date: w.date
+                }))
+            }
+        });
+
+    } catch (error) {
+        console.error('Stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error fetching stats'
+        });
+    }
+});
+
+/**
+ * @route   GET /api/users/leaderboard
+ * @desc    Get top users by XP
+ * @access  Private
+ */
+router.get('/leaderboard', protect, async (req, res) => {
+    try {
+        const topUsers = await User.find({})
+            .select('username xp streak')
+            .sort({ xp: -1 })
+            .limit(10);
+
+        res.json({
+            success: true,
+            leaderboard: topUsers.map((user, index) => ({
+                rank: index + 1,
+                username: user.username,
+                xp: user.xp,
+                streak: user.streak,
+                level: user.getLevel()
+            }))
+        });
+
+    } catch (error) {
+        console.error('Leaderboard error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error fetching leaderboard'
+        });
+    }
+});
+
+module.exports = router;
