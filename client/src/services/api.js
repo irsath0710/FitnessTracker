@@ -22,9 +22,10 @@
 import axios from 'axios';
 
 // Create axios instance with default config
-// Uses /api path which works both locally (via Vite proxy) and in production (same domain)
+// In production (Vercel), uses VITE_API_URL environment variable
+// In development, uses proxy configured in vite.config.js
 const api = axios.create({
-    baseURL: '/api',
+    baseURL: import.meta.env.VITE_API_URL || '/api',
     headers: {
         'Content-Type': 'application/json',
     },
