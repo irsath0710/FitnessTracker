@@ -117,7 +117,7 @@ export default function Dashboard() {
 
         // Today's progress insight
         if (todayBurned >= dailyGoal) {
-            insights.push({ type: 'success', icon: <Zap size={16} />, text: `🔥 Goal crushed! You burned ${todayBurned} kcal today!` });
+            insights.push({ type: 'success', icon: <Zap size={16} />, text: `Goal achieved! You burned ${todayBurned} kcal today!` });
         } else if (todayBurned > 0) {
             const remaining = dailyGoal - todayBurned;
             insights.push({ type: 'info', icon: <Target size={16} />, text: `Keep going! ${remaining} kcal more to hit your daily goal` });
@@ -144,7 +144,7 @@ export default function Dashboard() {
 
         // Streak insight
         if (user?.streak >= 7) {
-            insights.push({ type: 'success', icon: <Flame size={16} />, text: `${user.streak} day streak! You're on fire! 🔥` });
+            insights.push({ type: 'success', icon: <Flame size={16} />, text: `${user.streak} day streak! Keep it going!` });
         }
 
         return insights;
@@ -255,7 +255,7 @@ export default function Dashboard() {
                                             itemStyle={{ color: '#fff' }}
                                             formatter={(value, name) => [
                                                 `${value} kcal`,
-                                                name === 'intake' ? '🍽️ Intake' : '🔥 Burned'
+                                                name === 'intake' ? 'Calories Intake' : 'Calories Burned'
                                             ]}
                                         />
                                         <Legend 

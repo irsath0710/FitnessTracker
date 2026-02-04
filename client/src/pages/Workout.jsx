@@ -117,7 +117,7 @@ export default function Workout() {
             // Show success notification
             setNotification({
                 type: 'success',
-                message: `Quest Complete! +${response.data.workout.xpEarned} XP 🔥`
+                message: `Workout logged! +${response.data.workout.xpEarned} XP earned`
             });
 
             // Reset form
@@ -414,7 +414,7 @@ export default function Workout() {
                         <div className="text-center py-4 text-zinc-500 text-sm">
                             {activeTab === 'time' 
                                 ? '⏱️ Log workouts by duration (minutes)'
-                                : '💪 Log workouts by reps and sets'
+                                : 'Log workouts by reps and sets'
                             }
                         </div>
                     </>
@@ -428,7 +428,7 @@ export default function Workout() {
                     </h3>
                     <p className="text-sm text-zinc-400 mt-1">
                         {user?.streak > 0
-                            ? `You're on a ${user.streak}-day streak! Keep it going! 🔥`
+                            ? `You're on a ${user.streak}-day streak! Keep it going!`
                             : 'Complete a workout to start building your streak'}
                     </p>
                 </div>
