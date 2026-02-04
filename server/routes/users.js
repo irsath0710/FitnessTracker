@@ -36,6 +36,7 @@ router.put(
     [
         body('height').optional().isFloat({ min: 100, max: 250 }),
         body('weight').optional().isFloat({ min: 30, max: 300 }),
+        body('goalWeight').optional().isFloat({ min: 30, max: 300 }),
         body('bodyFat').optional().isFloat({ min: 3, max: 60 }),
         body('age').optional().isInt({ min: 13, max: 120 })
     ],
@@ -51,7 +52,7 @@ router.put(
 
             // Fields that can be updated
             const allowedFields = [
-                'height', 'weight', 'age', 'gender', 'bodyFat',
+                'height', 'weight', 'goalWeight', 'age', 'gender', 'bodyFat',
                 'goal', 'dailyCalorieGoal', 'dailyBurnGoal'
             ];
 
@@ -79,6 +80,7 @@ router.put(
                     email: user.email,
                     height: user.height,
                     weight: user.weight,
+                    goalWeight: user.goalWeight,
                     age: user.age,
                     gender: user.gender,
                     bodyFat: user.bodyFat,
@@ -103,10 +105,10 @@ router.put(
 
 /**
  * @route   GET /api/users/stats
- * @desc    Get user statistics and summary
+ * @desc    Get user statistics and summary with activity analysis
  * @access  Private
  * 
- * Returns aggregated data for the dashboard
+ * Returns aggregated data for the dashboard with comprehensive activity analysis
  */
 router.get('/stats', protect, async (req, res) => {
     try {
@@ -121,10 +123,71 @@ router.get('/stats', protect, async (req, res) => {
         // Get weekly meal data for charts
         const weeklyMealData = await Meal.getWeeklyData(userId);
 
-        // Get recent workouts
-        const recentWorkouts = await Workout.find({ userId })
-            .sort({ date: -1 })
-            .limit(7);
+        // Get recent workouts (last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+
+        const recentWorkouts = await Workout.find({ 
+            userId,
+            date: { $gte: sevenDaysAgo }
+        }).sort({ date: -1 });
+
+        // Get workout breakdown by type
+        const workoutBreakdown = await Workout.aggregate([
+            {
+                $match: {
+                    userId: req.user._id,
+                    date: { $gte: sevenDaysAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: '$type',
+                    count: { $sum: 1 },
+                    totalCalories: { $sum: '$caloriesBurned' },
+                    totalDuration: { $sum: '$duration' },
+                    totalReps: { $sum: { $multiply: ['$reps', '$sets'] } }
+                }
+            },
+            {
+                $project: {
+                    type: '$_id',
+                    count: 1,
+                    calories: '$totalCalories',
+                    duration: '$totalDuration',
+                    totalReps: 1
+                }
+            },
+            { $sort: { calories: -1 } }
+        ]);
+
+        // Build weekly workout data grouped by day
+        const weeklyWorkoutData = await Workout.aggregate([
+            {
+                $match: {
+                    userId: req.user._id,
+                    date: { $gte: sevenDaysAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+                    totalCalories: { $sum: '$caloriesBurned' },
+                    totalDuration: { $sum: '$duration' },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    date: '$_id',
+                    totalCalories: 1,
+                    totalDuration: 1,
+                    count: 1
+                }
+            },
+            { $sort: { date: 1 } }
+        ]);
 
         // Calculate streak status
         const today = new Date();
@@ -135,6 +198,15 @@ router.get('/stats', protect, async (req, res) => {
             date: { $gte: today }
         });
 
+        // Today's stats
+        const todayBurned = recentWorkouts
+            .filter(w => new Date(w.date) >= today)
+            .reduce((sum, w) => sum + w.caloriesBurned, 0);
+
+        const todayDuration = recentWorkouts
+            .filter(w => new Date(w.date) >= today)
+            .reduce((sum, w) => sum + (w.duration || 0), 0);
+
         res.json({
             success: true,
             stats: {
@@ -143,29 +215,45 @@ router.get('/stats', protect, async (req, res) => {
                     streak: req.user.streak,
                     level: req.user.getLevel(),
                     weight: req.user.weight,
+                    goalWeight: req.user.goalWeight,
                     bodyFat: req.user.bodyFat
                 },
                 today: {
                     caloriesConsumed: todayMeals.totalCalories,
-                    caloriesBurned: recentWorkouts
-                        .filter(w => new Date(w.date) >= today)
-                        .reduce((sum, w) => sum + w.caloriesBurned, 0),
+                    caloriesBurned: todayBurned,
+                    duration: todayDuration,
                     protein: todayMeals.totalProtein,
                     carbs: todayMeals.totalCarbs,
                     fats: todayMeals.totalFats,
-                    workoutCompleted: !!todayWorkout
+                    workoutCompleted: !!todayWorkout,
+                    workoutCount: recentWorkouts.filter(w => new Date(w.date) >= today).length
                 },
                 weekly: {
-                    workouts: workoutSummary,
+                    workouts: weeklyWorkoutData.map(w => ({
+                        date: w.date,
+                        totalCalories: w.totalCalories,
+                        totalDuration: w.totalDuration,
+                        count: w.count
+                    })),
                     meals: weeklyMealData
                 },
-                recentWorkouts: recentWorkouts.map(w => ({
+                workoutBreakdown: workoutBreakdown.map(w => ({
+                    type: w.type,
+                    count: w.count,
+                    calories: w.calories,
+                    duration: w.duration,
+                    totalReps: w.totalReps || 0
+                })),
+                recentWorkouts: recentWorkouts.slice(0, 10).map(w => ({
                     id: w._id,
                     type: w.type,
                     duration: w.duration,
+                    reps: w.reps,
+                    sets: w.sets,
                     caloriesBurned: w.caloriesBurned,
                     xpEarned: w.xpEarned,
-                    date: w.date
+                    date: w.date,
+                    inputType: w.inputType
                 }))
             }
         });

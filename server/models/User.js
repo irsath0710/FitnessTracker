@@ -74,6 +74,14 @@ const UserSchema = new mongoose.Schema({
         max: [300, 'Weight cannot exceed 300kg']
     },
 
+    // Goal weight - target weight the user wants to achieve
+    goalWeight: {
+        type: Number,
+        default: 70,  // kg
+        min: [30, 'Goal weight must be at least 30kg'],
+        max: [300, 'Goal weight cannot exceed 300kg']
+    },
+
     age: {
         type: Number,
         min: [13, 'Must be at least 13 years old'],

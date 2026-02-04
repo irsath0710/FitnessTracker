@@ -82,8 +82,10 @@ router.get('/', async (req, res) => {
  * 
  * Request body:
  * {
- *   "type": "running" | "cycling" | "weight_lifting" | etc,
- *   "duration": 30 (minutes),
+ *   "type": "running" | "cycling" | "pushups" | etc,
+ *   "duration": 30 (minutes, for time-based),
+ *   "reps": 50 (for count-based),
+ *   "sets": 3 (optional, for count-based),
  *   "intensity": "low" | "moderate" | "high" (optional),
  *   "notes": "string" (optional)
  * }
@@ -91,8 +93,7 @@ router.get('/', async (req, res) => {
 router.post(
     '/',
     [
-        body('type').isString().notEmpty().withMessage('Workout type is required'),
-        body('duration').isInt({ min: 1 }).withMessage('Duration must be at least 1 minute')
+        body('type').isString().notEmpty().withMessage('Workout type is required')
     ],
     async (req, res) => {
         try {
@@ -104,13 +105,35 @@ router.post(
                 });
             }
 
-            const { type, duration, intensity, notes } = req.body;
+            const { type, duration, reps, sets, intensity, notes } = req.body;
+            
+            // Get workout category config
+            const { WORKOUT_CATEGORIES } = require('../models/Workout');
+            const workoutConfig = WORKOUT_CATEGORIES[type.toLowerCase()] || WORKOUT_CATEGORIES.other;
+            const inputType = workoutConfig.type;
+
+            // Validate based on input type
+            if (inputType === 'time' && (!duration || duration < 1)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Duration is required for time-based workouts'
+                });
+            }
+            if (inputType === 'count' && (!reps || reps < 1)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Reps count is required for count-based workouts'
+                });
+            }
 
             // Create workout
             const workout = await Workout.create({
                 userId: req.user.id,
                 type: type.toLowerCase(),
-                duration,
+                inputType,
+                duration: duration || 0,
+                reps: reps || 0,
+                sets: sets || 1,
                 intensity: intensity || 'moderate',
                 notes
             });
@@ -159,7 +182,10 @@ router.post(
                 workout: {
                     id: workout._id,
                     type: workout.type,
+                    inputType: workout.inputType,
                     duration: workout.duration,
+                    reps: workout.reps,
+                    sets: workout.sets,
                     intensity: workout.intensity,
                     caloriesBurned: workout.caloriesBurned,
                     xpEarned: workout.xpEarned,
@@ -184,19 +210,49 @@ router.post(
 
 /**
  * @route   GET /api/workouts/types
- * @desc    Get available workout types with MET values
+ * @desc    Get available workout types with categories and calorie info
  * @access  Private
  */
 router.get('/types', async (req, res) => {
-    const { MET_VALUES } = require('../models/Workout');
+    const { WORKOUT_CATEGORIES } = require('../models/Workout');
+    const userWeight = req.user.weight || 70;
+
+    const types = Object.entries(WORKOUT_CATEGORIES).map(([type, config]) => {
+        let calorieInfo;
+        if (config.type === 'time') {
+            // Calories per 30 min for time-based
+            calorieInfo = {
+                caloriesPer30Min: Math.round(config.met * userWeight * 0.5),
+                unit: 'minutes'
+            };
+        } else {
+            // Calories per 10 reps for count-based
+            calorieInfo = {
+                caloriesPer10Reps: Math.round(config.caloriesPerRep * 10 * (userWeight / 70)),
+                unit: 'reps'
+            };
+        }
+
+        return {
+            type,
+            inputType: config.type,
+            label: config.label,
+            icon: config.icon,
+            met: config.met,
+            caloriesPerRep: config.caloriesPerRep,
+            ...calorieInfo
+        };
+    });
+
+    // Sort: time-based first, then count-based
+    types.sort((a, b) => {
+        if (a.inputType === b.inputType) return a.label.localeCompare(b.label);
+        return a.inputType === 'time' ? -1 : 1;
+    });
 
     res.json({
         success: true,
-        types: Object.entries(MET_VALUES).map(([type, met]) => ({
-            type,
-            met,
-            caloriesPer30Min: Math.round(met * (req.user.weight || 70) * 0.5)
-        }))
+        types
     });
 });
 

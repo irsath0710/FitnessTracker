@@ -110,9 +110,12 @@ router.post(
                     email: user.email,
                     height: user.height,
                     weight: user.weight,
+                    goalWeight: user.goalWeight || user.weight,
                     bodyFat: user.bodyFat,
                     xp: user.xp,
-                    streak: user.streak
+                    streak: user.streak,
+                    dailyCalorieGoal: user.dailyCalorieGoal,
+                    dailyBurnGoal: user.dailyBurnGoal
                 }
             });
 
@@ -209,10 +212,13 @@ router.post(
                     email: user.email,
                     height: user.height,
                     weight: user.weight,
+                    goalWeight: user.goalWeight || user.weight,
                     bodyFat: user.bodyFat,
                     xp: user.xp,
                     streak: user.streak,
-                    goal: user.goal
+                    goal: user.goal,
+                    dailyCalorieGoal: user.dailyCalorieGoal,
+                    dailyBurnGoal: user.dailyBurnGoal
                 }
             });
 
@@ -246,6 +252,7 @@ router.get('/me', protect, async (req, res) => {
                 email: user.email,
                 height: user.height,
                 weight: user.weight,
+                goalWeight: user.goalWeight || user.weight,
                 age: user.age,
                 gender: user.gender,
                 bodyFat: user.bodyFat,

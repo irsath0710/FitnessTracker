@@ -40,7 +40,26 @@ const MealSchema = new mongoose.Schema({
         default: 'snack'
     },
 
-    // Calories (kcal)
+    // Quantity and unit for the food item
+    quantity: {
+        type: Number,
+        default: 1,
+        min: [0.1, 'Quantity must be at least 0.1']
+    },
+
+    unit: {
+        type: String,
+        enum: ['grams', 'pieces', 'cups', 'ml', 'tbsp', 'serving'],
+        default: 'serving'
+    },
+
+    // Serving size reference (from API, in grams)
+    servingSize: {
+        type: Number,
+        default: 100
+    },
+
+    // Calories (kcal) - per total quantity
     calories: {
         type: Number,
         required: [true, 'Calories are required'],
@@ -48,7 +67,7 @@ const MealSchema = new mongoose.Schema({
         max: [10000, 'Calories seem too high']
     },
 
-    // Macronutrients (grams)
+    // Macronutrients (grams) - per total quantity
     protein: {
         type: Number,
         default: 0,
@@ -71,6 +90,12 @@ const MealSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         min: [0, 'Fiber cannot be negative']
+    },
+
+    // Food ID from external API (for future reference)
+    externalId: {
+        type: String,
+        default: null
     },
 
     // When the meal was consumed

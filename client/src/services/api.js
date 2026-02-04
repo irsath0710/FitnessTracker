@@ -121,6 +121,8 @@ export const mealAPI = {
     delete: (id) => api.delete(`/meals/${id}`),
     getToday: () => api.get('/meals/today'),
     getWeekly: () => api.get('/meals/weekly'),
+    search: (query) => api.get('/meals/search', { params: { query } }),
+    getCommon: () => api.get('/meals/common'),
 };
 
 // ============================================
