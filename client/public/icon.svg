@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Lightning bolt / Level Up arrow -->
+  <path d="M280 80 L180 260 L240 260 L220 432 L340 240 L275 240 Z" 
+        fill="url(#bolt)" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+  <!-- Up arrow accent -->
+  <path d="M256 100 L220 160 L246 160 L246 200 L266 200 L266 160 L292 160 Z" 
+        fill="#22c55e" opacity="0.8"/>
+</svg>

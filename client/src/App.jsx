@@ -21,6 +21,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoadingScreen } from './components/ui';
 import ErrorBoundary from './components/ErrorBoundary';
+import InstallPWA from './components/InstallPWA';
 
 // Pages (lazy loaded for better performance)
 const Login = React.lazy(() => import('./pages/Login'));
@@ -148,6 +149,7 @@ export default function App() {
         <AuthProvider>
           <React.Suspense fallback={<LoadingScreen />}>
             <AppRoutes />
+            <InstallPWA />
           </React.Suspense>
         </AuthProvider>
       </BrowserRouter>
