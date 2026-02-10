@@ -22,7 +22,7 @@ export default function Login() {
     const { login, error } = useAuth();
 
     const [formData, setFormData] = useState({
-        email: '',
+        identifier: '',
         password: ''
     });
     const [loading, setLoading] = useState(false);
@@ -75,9 +75,9 @@ export default function Login() {
 
                         <Input
                             label="Email or Username"
-                            name="email"
+                            name="identifier"
                             placeholder="player@example.com"
-                            value={formData.email}
+                            value={formData.identifier}
                             onChange={handleChange}
                             required
                         />

@@ -155,13 +155,24 @@ router.post(
                 });
             }
 
-            const { email, username, password } = req.body;
+            const { email, username, identifier, password } = req.body;
+
+            // Support 'identifier' field (can be email or username)
+            // Also support separate email/username fields for backwards compatibility
+            const loginId = identifier || email || username;
+
+            if (!loginId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email or username is required'
+                });
+            }
 
             // Find user by email or username
             const user = await User.findOne({
                 $or: [
-                    { email: email?.toLowerCase() },
-                    { username }
+                    { email: loginId.toLowerCase() },
+                    { username: loginId }
                 ]
             });
 
@@ -193,9 +204,9 @@ router.post(
                 const diffDays = Math.floor((today - lastWorkout) / (1000 * 60 * 60 * 24));
 
                 if (diffDays > 1) {
-                    // Streak broken
+                    // Streak broken - use updateOne to avoid triggering pre-save hook
+                    await User.updateOne({ _id: user._id }, { $set: { streak: 0 } });
                     user.streak = 0;
-                    await user.save();
                 }
             }
 
