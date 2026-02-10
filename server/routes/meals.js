@@ -229,40 +229,73 @@ router.get('/search', async (req, res) => {
             });
         }
 
-        // Use Open Food Facts API (free, no API key needed)
-        const response = await fetch(
-            `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20`
-        );
-        
-        const data = await response.json();
+        // Use Open Food Facts API with timeout for reliability
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
-        // Transform the response to our format
-        const foods = (data.products || [])
-            .filter(p => p.product_name && p.nutriments)
-            .slice(0, 15)
-            .map(product => {
-                const n = product.nutriments;
-                return {
-                    id: product._id || product.code,
-                    name: product.product_name,
-                    brand: product.brands || '',
-                    image: product.image_small_url || product.image_url,
-                    servingSize: product.serving_quantity || 100,
-                    servingUnit: product.serving_quantity ? 'serving' : 'grams',
-                    // Nutrition per 100g
+        let foods = [];
+        
+        try {
+            const response = await fetch(
+                `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20`,
+                { signal: controller.signal }
+            );
+            clearTimeout(timeout);
+            
+            const data = await response.json();
+
+            // Transform the response to our format
+            foods = (data.products || [])
+                .filter(p => p.product_name && p.nutriments)
+                .slice(0, 15)
+                .map(product => {
+                    const n = product.nutriments;
+                    return {
+                        id: product._id || product.code,
+                        name: product.product_name,
+                        brand: product.brands || '',
+                        image: product.image_small_url || product.image_url,
+                        servingSize: product.serving_quantity || 100,
+                        servingUnit: product.serving_quantity ? 'serving' : 'grams',
+                        nutritionPer100g: {
+                            calories: Math.round(n['energy-kcal_100g'] || n.energy_100g / 4.184 || 0),
+                            protein: Math.round((n.proteins_100g || 0) * 10) / 10,
+                            carbs: Math.round((n.carbohydrates_100g || 0) * 10) / 10,
+                            fats: Math.round((n.fat_100g || 0) * 10) / 10,
+                            fiber: Math.round((n.fiber_100g || 0) * 10) / 10,
+                            sugar: Math.round((n.sugars_100g || 0) * 10) / 10,
+                            sodium: Math.round(n.sodium_100g || 0)
+                        },
+                        suggestedUnit: getSuggestedUnit(product.product_name, product.categories_tags)
+                    };
+                });
+        } catch (fetchError) {
+            clearTimeout(timeout);
+            console.warn('Food API unavailable, falling back to common foods:', fetchError.message);
+            
+            // Fallback: filter common foods by search query
+            const queryLower = query.toLowerCase();
+            foods = COMMON_FOODS
+                .filter(f => f.name.toLowerCase().includes(queryLower))
+                .map((food, index) => ({
+                    id: `common_${index}`,
+                    name: food.name,
+                    brand: 'Common Foods',
+                    image: null,
+                    servingSize: food.servingSize,
+                    servingUnit: food.unit,
                     nutritionPer100g: {
-                        calories: Math.round(n['energy-kcal_100g'] || n.energy_100g / 4.184 || 0),
-                        protein: Math.round((n.proteins_100g || 0) * 10) / 10,
-                        carbs: Math.round((n.carbohydrates_100g || 0) * 10) / 10,
-                        fats: Math.round((n.fat_100g || 0) * 10) / 10,
-                        fiber: Math.round((n.fiber_100g || 0) * 10) / 10,
-                        sugar: Math.round((n.sugars_100g || 0) * 10) / 10,
-                        sodium: Math.round(n.sodium_100g || 0)
+                        calories: food.unit === 'grams' ? food.calories : Math.round(food.calories * (100 / (food.servingSize || 1))),
+                        protein: food.protein,
+                        carbs: food.carbs,
+                        fats: food.fats,
+                        fiber: food.fiber,
+                        sugar: 0,
+                        sodium: 0,
                     },
-                    // Suggested unit based on food type
-                    suggestedUnit: getSuggestedUnit(product.product_name, product.categories_tags)
-                };
-            });
+                    suggestedUnit: food.unit,
+                }));
+        }
 
         res.json({
             success: true,

@@ -20,14 +20,15 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoadingScreen } from './components/ui';
+import ErrorBoundary from './components/ErrorBoundary';
 
-// Pages
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Workout from './pages/Workout';
-import Nutrition from './pages/Nutrition';
-import Profile from './pages/Profile';
+// Pages (lazy loaded for better performance)
+const Login = React.lazy(() => import('./pages/Login'));
+const Register = React.lazy(() => import('./pages/Register'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const Workout = React.lazy(() => import('./pages/Workout'));
+const Nutrition = React.lazy(() => import('./pages/Nutrition'));
+const Profile = React.lazy(() => import('./pages/Profile'));
 
 /**
  * ProtectedRoute Component
@@ -136,13 +137,20 @@ function AppRoutes() {
 
 /**
  * Main App Component
+ * 
+ * Wrapped with ErrorBoundary to catch runtime errors gracefully.
+ * Uses React.lazy + Suspense for code-splitting (smaller initial bundle).
  */
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <React.Suspense fallback={<LoadingScreen />}>
+            <AppRoutes />
+          </React.Suspense>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

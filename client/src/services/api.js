@@ -22,10 +22,9 @@
 import axios from 'axios';
 
 // Create axios instance with default config
-// In production (Vercel), uses VITE_API_URL environment variable
-// In development, uses proxy configured in vite.config.js
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || '/api',
+    timeout: 15000, // 15 second timeout for all requests
     headers: {
         'Content-Type': 'application/json',
     },

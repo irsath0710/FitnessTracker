@@ -87,6 +87,12 @@ export default function Nutrition() {
             } catch (error) {
                 console.error('Search failed:', error);
                 setSearchResults([]);
+                // Show user-friendly message on search failure
+                if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+                    setNotification({ type: 'warning', message: 'Search timed out. Try again or use Common Foods.' });
+                } else if (!error.response) {
+                    setNotification({ type: 'warning', message: 'Network error. Check your connection.' });
+                }
             } finally {
                 setSearching(false);
             }

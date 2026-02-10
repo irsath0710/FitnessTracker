@@ -358,7 +358,7 @@ export default function Register() {
                             {/* Basic Info Row */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                                 <div>
-                                    <label className="block text-xs uppercase tracking-wider text-zinc-500 mb-1 flex items-center gap-1">
+                                    <label className="text-xs uppercase tracking-wider text-zinc-500 mb-1 flex items-center gap-1">
                                         <Ruler size={12} /> Height (cm)
                                     </label>
                                     <input
@@ -372,7 +372,7 @@ export default function Register() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs uppercase tracking-wider text-zinc-500 mb-1 flex items-center gap-1">
+                                    <label className="text-xs uppercase tracking-wider text-zinc-500 mb-1 flex items-center gap-1">
                                         <Scale size={12} /> Weight (kg)
                                     </label>
                                     <input
@@ -398,7 +398,7 @@ export default function Register() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs uppercase tracking-wider text-zinc-500 mb-1 flex items-center gap-1">
+                                    <label className="text-xs uppercase tracking-wider text-zinc-500 mb-1 flex items-center gap-1">
                                         <User size={12} /> Gender
                                     </label>
                                     <select
@@ -448,7 +448,7 @@ export default function Register() {
 
                             {/* Fitness Goal */}
                             <div className="mb-6">
-                                <label className="block text-xs uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1">
+                                <label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1">
                                     <Target size={12} /> Fitness Goal
                                 </label>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">

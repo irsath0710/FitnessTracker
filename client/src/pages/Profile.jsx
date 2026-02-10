@@ -251,7 +251,7 @@ export default function Profile() {
                 <Card title="Daily Goals">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs text-zinc-500 mb-2 flex items-center gap-1">
+                            <label className="text-xs text-zinc-500 mb-2 flex items-center gap-1">
                                 <Flame size={12} className="text-orange-400" /> Calorie Goal
                             </label>
                             <input
@@ -263,7 +263,7 @@ export default function Profile() {
                             <span className="text-xs text-zinc-500 mt-1">kcal / day</span>
                         </div>
                         <div>
-                            <label className="block text-xs text-zinc-500 mb-2 flex items-center gap-1">
+                            <label className="text-xs text-zinc-500 mb-2 flex items-center gap-1">
                                 <Zap size={12} className="text-blue-400" /> Burn Goal
                             </label>
                             <input

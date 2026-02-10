@@ -14,5 +14,17 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split heavy libraries into separate chunks for better caching
+          'three': ['three', '@react-three/fiber', '@react-three/drei'],
+          'charts': ['recharts'],
+          'vendor': ['react', 'react-dom', 'react-router-dom', 'axios'],
+        }
+      }
+    }
   }
 })

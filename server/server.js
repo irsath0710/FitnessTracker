@@ -32,7 +32,12 @@ require('dotenv').config();
 // Import dependencies
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
+const mongoose = require('mongoose');
 
 // Import route files
 const authRoutes = require('./routes/auth');
@@ -83,7 +88,6 @@ const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
     process.env.CLIENT_URL,
-    // Add your Vercel URL patterns
 ].filter(Boolean); // Remove undefined values
 
 app.use(cors({
@@ -91,16 +95,17 @@ app.use(cors({
         // Allow requests with no origin (like mobile apps or Postman)
         if (!origin) return callback(null, true);
 
-        // Check if origin is allowed or matches Vercel pattern
+        // Check if origin is in allowlist or matches Vercel deployment pattern
         if (allowedOrigins.includes(origin) ||
-            origin.endsWith('.vercel.app') ||
-            origin.includes('fitnesstracker')) {
+            origin.endsWith('.vercel.app')) {
             return callback(null, true);
         }
 
         callback(new Error('Not allowed by CORS'));
     },
-    credentials: true  // Allow cookies to be sent
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 /**
@@ -116,16 +121,59 @@ app.use(express.json({ limit: '10mb' }));  // Limit body size for security
 app.use(express.urlencoded({ extended: true }));
 
 /**
- * Request Logging (Development)
+ * Security Middleware
  * 
- * This simple middleware logs every request.
- * In production, you might use a library like 'morgan'.
+ * helmet() - Sets various HTTP security headers
+ * compression() - Compresses response bodies for performance
  */
-if (process.env.NODE_ENV !== 'production') {
-    app.use((req, res, next) => {
-        console.log(`${req.method} ${req.path}`);
-        next();  // Always call next() to continue the chain
-    });
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false, // Disabled for API server
+}));
+app.use(compression());
+
+/**
+ * Rate Limiting
+ * 
+ * Prevents abuse by limiting number of requests per IP.
+ * General: 100 requests per 15 minutes
+ * Auth: 20 requests per 15 minutes (stricter for login/register)
+ */
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
+    message: {
+        success: false,
+        message: 'Too many requests, please try again later.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    message: {
+        success: false,
+        message: 'Too many authentication attempts, please try again later.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Apply general rate limiter to all routes
+app.use('/api/', generalLimiter);
+
+/**
+ * Request Logging
+ * 
+ * Uses morgan for structured HTTP request logging.
+ * 'dev' format in development, 'combined' in production.
+ */
+if (process.env.NODE_ENV === 'production') {
+    app.use(morgan('combined'));
+} else {
+    app.use(morgan('dev'));
 }
 
 /**
@@ -143,17 +191,24 @@ if (process.env.NODE_ENV !== 'production') {
  *   The full path becomes: POST /api/auth/login
  */
 
-// Health check endpoint (useful for deployment)
+// Health check endpoint (useful for deployment monitoring)
 app.get('/api/health', (req, res) => {
+    const dbState = mongoose.connection.readyState;
+    const dbStates = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+    
     res.json({
         success: true,
         message: 'FitnessTracker API is running!',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        uptime: `${Math.floor(process.uptime())}s`,
+        environment: process.env.NODE_ENV || 'development',
+        database: dbStates[dbState] || 'unknown',
+        version: require('./package.json').version,
     });
 });
 
-// Mount route files
-app.use('/api/auth', authRoutes);       // /api/auth/register, /api/auth/login, etc.
+// Mount route files (auth routes get stricter rate limiting)
+app.use('/api/auth', authLimiter, authRoutes);       // /api/auth/register, /api/auth/login, etc.
 app.use('/api/users', userRoutes);      // /api/users/profile, /api/users/stats
 app.use('/api/workouts', workoutRoutes);// /api/workouts, /api/workouts/:id
 app.use('/api/meals', mealRoutes);      // /api/meals, /api/meals/today
