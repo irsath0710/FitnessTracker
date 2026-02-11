@@ -11,19 +11,30 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { LogOut, Save, Target, TrendingUp, TrendingDown, Scale, Ruler, User, Flame, Zap } from 'lucide-react';
+import { LogOut, Save, Target, TrendingUp, TrendingDown, Scale, Ruler, User, Flame, Zap, Camera, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { userAPI } from '../services/api';
 import { Card, Button, Toast } from '../components/ui';
 import RankBadge, { calculateLevel } from '../components/RankBadge';
 import NavBar from '../components/NavBar';
 
+const DEFAULT_AVATARS = [
+    { id: 1, src: '/avatars/avatar1.jpg', name: 'Baek Yoon-Ho' },
+    { id: 2, src: '/avatars/avatar2.jpg', name: 'Sung Jin-Woo' },
+    { id: 3, src: '/avatars/avatar3.jpg', name: 'Shadow Monarch' },
+    { id: 4, src: '/avatars/avatar4.jpg', name: 'Cha Hae-In' },
+    { id: 5, src: '/avatars/avatar5.jpg', name: 'Igris' },
+    { id: 6, src: '/avatars/avatar6.jpg', name: 'Choi Jong-In' },
+];
+
 export default function Profile() {
     const { user, logout, updateUser } = useAuth();
     const [saving, setSaving] = useState(false);
     const [notification, setNotification] = useState(null);
     const [activeTab, setActiveTab] = useState('metrics'); // 'metrics' or 'goals'
-    
+    const [profilePicture, setProfilePicture] = useState(user?.profilePicture || '');
+    const fileInputRef = React.useRef(null);
+
     const [formData, setFormData] = useState({
         weight: user?.weight || 70,
         height: user?.height || 170,
@@ -47,17 +58,69 @@ export default function Profile() {
         }
     }, [user]);
 
+    // Handle profile picture file selection
+    const handlePictureChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setNotification({ type: 'error', message: 'Please select an image file' });
+            return;
+        }
+
+        // Resize and convert to base64
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_SIZE = 200;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_SIZE) {
+                        height = Math.round((height * MAX_SIZE) / width);
+                        width = MAX_SIZE;
+                    }
+                } else {
+                    if (height > MAX_SIZE) {
+                        width = Math.round((width * MAX_SIZE) / height);
+                        height = MAX_SIZE;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                setProfilePicture(base64);
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleSave = async () => {
         setSaving(true);
         try {
-            const response = await userAPI.updateProfile({
+            const payload = {
                 weight: Number(formData.weight),
                 height: Number(formData.height),
                 goalWeight: Number(formData.goalWeight),
                 bodyFat: Number(formData.bodyFat),
                 dailyCalorieGoal: Number(formData.dailyCalorieGoal),
                 dailyBurnGoal: Number(formData.dailyBurnGoal)
-            });
+            };
+
+            // Only include profilePicture if it changed
+            if (profilePicture !== (user?.profilePicture || '')) {
+                payload.profilePicture = profilePicture;
+            }
+
+            const response = await userAPI.updateProfile(payload);
             updateUser(response.data.user);
             setNotification({ type: 'success', message: 'Profile updated!' });
         } catch (error) {
@@ -75,21 +138,21 @@ export default function Profile() {
     }, [notification]);
 
     const level = calculateLevel(user?.xp || 0);
-    
+
     // Calculate weight progress
     const weightDiff = formData.weight - formData.goalWeight;
     const isLosingWeight = formData.goalWeight < formData.weight;
     const isGainingWeight = formData.goalWeight > formData.weight;
     const weightProgress = Math.abs(weightDiff);
     const bmi = formData.weight / Math.pow(formData.height / 100, 2);
-    
+
     const getBMICategory = (bmi) => {
         if (bmi < 18.5) return { label: 'Underweight', color: 'text-yellow-400' };
         if (bmi < 25) return { label: 'Normal', color: 'text-green-400' };
         if (bmi < 30) return { label: 'Overweight', color: 'text-orange-400' };
         return { label: 'Obese', color: 'text-red-400' };
     };
-    
+
     const bmiCategory = getBMICategory(bmi);
 
     return (
@@ -97,9 +160,60 @@ export default function Profile() {
             <main className="max-w-xl mx-auto px-4 pt-8 space-y-6">
                 {/* Profile Header */}
                 <div className="text-center mb-8 relative">
-                    <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 mx-auto mb-4 border-4 border-zinc-900 shadow-2xl relative z-10 flex items-center justify-center">
-                        <User size={48} className="text-white/80" />
+                    <div
+                        className="w-28 h-28 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 mx-auto mb-4 border-4 border-zinc-900 shadow-2xl relative z-10 flex items-center justify-center cursor-pointer group overflow-hidden"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        {profilePicture ? (
+                            <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            <User size={48} className="text-white/80" />
+                        )}
+                        {/* Camera overlay on hover */}
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Camera size={24} className="text-white" />
+                        </div>
                     </div>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePictureChange}
+                        className="hidden"
+                    />
+                    {/* Default Avatar Picker - only show if no profile picture is saved */}
+                    {!user?.profilePicture && (
+                        <>
+                            {/* Default Avatar Picker - only show if no profile picture is saved */}
+                            {!user?.profilePicture && (
+                                <>
+                                    {/* Default Avatar Picker */}
+                                    <div className="flex items-center justify-center gap-2 mt-2 mb-3">
+                                        {DEFAULT_AVATARS.map((avatar) => (
+                                            <button
+                                                key={avatar.id}
+                                                type="button"
+                                                onClick={() => setProfilePicture(avatar.src)}
+                                                className={`relative w-10 h-10 rounded-full overflow-hidden border-2 transition-all ${profilePicture === avatar.src
+                                                    ? 'border-blue-500 ring-2 ring-blue-500/40 scale-110'
+                                                    : 'border-zinc-700 hover:border-zinc-400 hover:scale-105'
+                                                    }`}
+                                                title={avatar.name}
+                                            >
+                                                <img src={avatar.src} alt={avatar.name} className="w-full h-full object-cover" />
+                                                {profilePicture === avatar.src && (
+                                                    <div className="absolute inset-0 bg-blue-500/30 flex items-center justify-center">
+                                                        <Check size={14} className="text-white" />
+                                                    </div>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-[10px] text-zinc-600 mb-2">Pick an avatar or click above to upload</p>
+                                </>
+                            )}
+                        </>
+                    )}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 bg-blue-500/20 blur-xl rounded-full z-0" />
                     <h2 className="text-3xl font-bold mb-1">{user?.username}</h2>
                     <p className="text-blue-400 text-xs tracking-[0.3em] uppercase bg-blue-500/10 inline-block px-3 py-1 rounded-full border border-blue-500/20">
@@ -118,7 +232,7 @@ export default function Profile() {
                         <Target size={16} className="text-green-400" />
                         Body Metrics
                     </h3>
-                    
+
                     {/* Height & Weight Display */}
                     <div className="grid grid-cols-2 gap-4 mb-6">
                         <div className="bg-zinc-800/50 rounded-xl p-4 text-center">
@@ -139,7 +253,7 @@ export default function Profile() {
                             <span className="text-sm text-zinc-400">Goal Weight</span>
                             <span className="text-xl font-bold text-green-400">{formData.goalWeight} kg</span>
                         </div>
-                        
+
                         {/* Progress indicator */}
                         <div className="flex items-center gap-3">
                             {weightDiff === 0 ? (
@@ -153,7 +267,7 @@ export default function Profile() {
                                         {isLosingWeight ? <TrendingDown size={18} /> : <TrendingUp size={18} />}
                                     </div>
                                     <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                                        <div 
+                                        <div
                                             className={`h-full ${isLosingWeight ? 'bg-orange-500' : 'bg-blue-500'}`}
                                             style={{ width: `${Math.min(100, 100 - (weightProgress / Math.max(weightProgress, 20) * 100))}%` }}
                                         />
@@ -186,9 +300,9 @@ export default function Profile() {
                                 <span className="text-lg font-mono font-bold">{formData.height} cm</span>
                             </div>
                             <input
-                                type="range" 
-                                min="140" 
-                                max="220" 
+                                type="range"
+                                min="140"
+                                max="220"
                                 value={formData.height}
                                 onChange={(e) => setFormData({ ...formData, height: Number(e.target.value) })}
                                 className="w-full accent-blue-500"
@@ -202,9 +316,9 @@ export default function Profile() {
                                 <span className="text-lg font-mono font-bold">{formData.weight} kg</span>
                             </div>
                             <input
-                                type="range" 
-                                min="40" 
-                                max="150" 
+                                type="range"
+                                min="40"
+                                max="150"
                                 value={formData.weight}
                                 onChange={(e) => setFormData({ ...formData, weight: Number(e.target.value) })}
                                 className="w-full accent-purple-500"
@@ -220,9 +334,9 @@ export default function Profile() {
                                 <span className="text-lg font-mono font-bold text-green-400">{formData.goalWeight} kg</span>
                             </div>
                             <input
-                                type="range" 
-                                min="40" 
-                                max="150" 
+                                type="range"
+                                min="40"
+                                max="150"
                                 value={formData.goalWeight}
                                 onChange={(e) => setFormData({ ...formData, goalWeight: Number(e.target.value) })}
                                 className="w-full accent-green-500"
@@ -236,9 +350,9 @@ export default function Profile() {
                                 <span className="text-lg font-mono font-bold">{formData.bodyFat}%</span>
                             </div>
                             <input
-                                type="range" 
-                                min="5" 
-                                max="50" 
+                                type="range"
+                                min="5"
+                                max="50"
                                 value={formData.bodyFat}
                                 onChange={(e) => setFormData({ ...formData, bodyFat: Number(e.target.value) })}
                                 className="w-full accent-orange-500"
@@ -277,10 +391,10 @@ export default function Profile() {
                     </div>
                 </Card>
 
-                <Button 
-                    variant="system" 
-                    onClick={handleSave} 
-                    disabled={saving} 
+                <Button
+                    variant="system"
+                    onClick={handleSave}
+                    disabled={saving}
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
                 >
                     <Save size={18} /> {saving ? 'Saving...' : 'Save Changes'}
@@ -298,15 +412,15 @@ export default function Profile() {
                     </div>
                 </div>
 
-                <Button 
-                    variant="secondary" 
-                    onClick={logout} 
+                <Button
+                    variant="secondary"
+                    onClick={logout}
                     className="w-full text-red-400 border-red-900/30 hover:bg-red-900/10"
                 >
                     <LogOut size={18} /> Log Out
                 </Button>
             </main>
-            
+
             <NavBar />
             {notification && <Toast message={notification.message} type={notification.type} />}
         </div>

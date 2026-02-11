@@ -20,7 +20,7 @@ const BodyFatVisual = ({ percentage, gender, isSelected, onClick, label, descrip
     // SVG body silhouettes based on body fat percentage
     const getBodyShape = () => {
         const isMale = gender === 'male';
-        
+
         // Different body widths based on body fat
         const getWidth = () => {
             if (percentage <= 12) return isMale ? 28 : 26;
@@ -38,30 +38,30 @@ const BodyFatVisual = ({ percentage, gender, isSelected, onClick, label, descrip
             return (
                 <svg viewBox="0 0 80 120" className="w-full h-full">
                     {/* Head */}
-                    <ellipse cx="40" cy="12" rx="10" ry="11" fill={color} fillOpacity={fillOpacity} stroke={color} strokeWidth="1.5"/>
+                    <ellipse cx="40" cy="12" rx="10" ry="11" fill={color} fillOpacity={fillOpacity} stroke={color} strokeWidth="1.5" />
                     {/* Neck */}
-                    <rect x="36" y="22" width="8" height="6" fill={color} fillOpacity={fillOpacity} stroke={color} strokeWidth="1"/>
+                    <rect x="36" y="22" width="8" height="6" fill={color} fillOpacity={fillOpacity} stroke={color} strokeWidth="1" />
                     {/* Torso */}
-                    <path 
-                        d={`M${40-width/2} 28 
-                            Q${40-width/2-4} 50 ${40-width/2+2} 75 
-                            L${40+width/2-2} 75 
-                            Q${40+width/2+4} 50 ${40+width/2} 28 Z`}
+                    <path
+                        d={`M${40 - width / 2} 28 
+                            Q${40 - width / 2 - 4} 50 ${40 - width / 2 + 2} 75 
+                            L${40 + width / 2 - 2} 75 
+                            Q${40 + width / 2 + 4} 50 ${40 + width / 2} 28 Z`}
                         fill={color} fillOpacity={fillOpacity} stroke={color} strokeWidth="1.5"
                     />
                     {/* Arms */}
-                    <path d={`M${40-width/2} 30 Q${40-width/2-12} 45 ${40-width/2-8} 65`} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round"/>
-                    <path d={`M${40+width/2} 30 Q${40+width/2+12} 45 ${40+width/2+8} 65`} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round"/>
+                    <path d={`M${40 - width / 2} 30 Q${40 - width / 2 - 12} 45 ${40 - width / 2 - 8} 65`} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" />
+                    <path d={`M${40 + width / 2} 30 Q${40 + width / 2 + 12} 45 ${40 + width / 2 + 8} 65`} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" />
                     {/* Legs */}
-                    <path d={`M${40-width/4} 75 L${40-width/4-3} 115`} fill="none" stroke={color} strokeWidth="6" strokeLinecap="round"/>
-                    <path d={`M${40+width/4} 75 L${40+width/4+3} 115`} fill="none" stroke={color} strokeWidth="6" strokeLinecap="round"/>
+                    <path d={`M${40 - width / 4} 75 L${40 - width / 4 - 3} 115`} fill="none" stroke={color} strokeWidth="6" strokeLinecap="round" />
+                    <path d={`M${40 + width / 4} 75 L${40 + width / 4 + 3} 115`} fill="none" stroke={color} strokeWidth="6" strokeLinecap="round" />
                     {/* Abs indication for low body fat */}
                     {percentage <= 15 && (
                         <>
-                            <line x1="40" y1="40" x2="40" y2="65" stroke={color} strokeWidth="0.5" opacity="0.5"/>
-                            <line x1="35" y1="45" x2="45" y2="45" stroke={color} strokeWidth="0.5" opacity="0.5"/>
-                            <line x1="35" y1="52" x2="45" y2="52" stroke={color} strokeWidth="0.5" opacity="0.5"/>
-                            <line x1="35" y1="59" x2="45" y2="59" stroke={color} strokeWidth="0.5" opacity="0.5"/>
+                            <line x1="40" y1="40" x2="40" y2="65" stroke={color} strokeWidth="0.5" opacity="0.5" />
+                            <line x1="35" y1="45" x2="45" y2="45" stroke={color} strokeWidth="0.5" opacity="0.5" />
+                            <line x1="35" y1="52" x2="45" y2="52" stroke={color} strokeWidth="0.5" opacity="0.5" />
+                            <line x1="35" y1="59" x2="45" y2="59" stroke={color} strokeWidth="0.5" opacity="0.5" />
                         </>
                     )}
                 </svg>
@@ -70,27 +70,27 @@ const BodyFatVisual = ({ percentage, gender, isSelected, onClick, label, descrip
             return (
                 <svg viewBox="0 0 80 120" className="w-full h-full">
                     {/* Head */}
-                    <ellipse cx="40" cy="12" rx="9" ry="10" fill={color} fillOpacity={fillOpacity} stroke={color} strokeWidth="1.5"/>
+                    <ellipse cx="40" cy="12" rx="9" ry="10" fill={color} fillOpacity={fillOpacity} stroke={color} strokeWidth="1.5" />
                     {/* Neck */}
-                    <rect x="37" y="21" width="6" height="5" fill={color} fillOpacity={fillOpacity} stroke={color} strokeWidth="1"/>
+                    <rect x="37" y="21" width="6" height="5" fill={color} fillOpacity={fillOpacity} stroke={color} strokeWidth="1" />
                     {/* Torso - hourglass shape for female */}
-                    <path 
-                        d={`M${40-width/2+4} 26 
-                            Q${40-width/2-2} 35 ${40-width/2} 45
-                            Q${40-width/2+6} 55 ${40-width/2+2} 65
-                            Q${40-width/2-2} 72 ${40-width/2+4} 78
-                            L${40+width/2-4} 78 
-                            Q${40+width/2+2} 72 ${40+width/2-2} 65
-                            Q${40+width/2-6} 55 ${40+width/2} 45
-                            Q${40+width/2+2} 35 ${40+width/2-4} 26 Z`}
+                    <path
+                        d={`M${40 - width / 2 + 4} 26 
+                            Q${40 - width / 2 - 2} 35 ${40 - width / 2} 45
+                            Q${40 - width / 2 + 6} 55 ${40 - width / 2 + 2} 65
+                            Q${40 - width / 2 - 2} 72 ${40 - width / 2 + 4} 78
+                            L${40 + width / 2 - 4} 78 
+                            Q${40 + width / 2 + 2} 72 ${40 + width / 2 - 2} 65
+                            Q${40 + width / 2 - 6} 55 ${40 + width / 2} 45
+                            Q${40 + width / 2 + 2} 35 ${40 + width / 2 - 4} 26 Z`}
                         fill={color} fillOpacity={fillOpacity} stroke={color} strokeWidth="1.5"
                     />
                     {/* Arms */}
-                    <path d={`M${40-width/2+4} 28 Q${40-width/2-10} 42 ${40-width/2-6} 60`} fill="none" stroke={color} strokeWidth="3.5" strokeLinecap="round"/>
-                    <path d={`M${40+width/2-4} 28 Q${40+width/2+10} 42 ${40+width/2+6} 60`} fill="none" stroke={color} strokeWidth="3.5" strokeLinecap="round"/>
+                    <path d={`M${40 - width / 2 + 4} 28 Q${40 - width / 2 - 10} 42 ${40 - width / 2 - 6} 60`} fill="none" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
+                    <path d={`M${40 + width / 2 - 4} 28 Q${40 + width / 2 + 10} 42 ${40 + width / 2 + 6} 60`} fill="none" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
                     {/* Legs */}
-                    <path d={`M${40-width/4+2} 78 L${40-width/4-1} 115`} fill="none" stroke={color} strokeWidth="5.5" strokeLinecap="round"/>
-                    <path d={`M${40+width/4-2} 78 L${40+width/4+1} 115`} fill="none" stroke={color} strokeWidth="5.5" strokeLinecap="round"/>
+                    <path d={`M${40 - width / 4 + 2} 78 L${40 - width / 4 - 1} 115`} fill="none" stroke={color} strokeWidth="5.5" strokeLinecap="round" />
+                    <path d={`M${40 + width / 4 - 2} 78 L${40 + width / 4 + 1} 115`} fill="none" stroke={color} strokeWidth="5.5" strokeLinecap="round" />
                 </svg>
             );
         }
@@ -108,11 +108,10 @@ const BodyFatVisual = ({ percentage, gender, isSelected, onClick, label, descrip
         <button
             type="button"
             onClick={onClick}
-            className={`relative flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 ${
-                isSelected 
-                    ? 'border-blue-500 bg-blue-500/20 scale-105 shadow-lg shadow-blue-500/20' 
-                    : 'border-zinc-700 bg-zinc-900/50 hover:border-zinc-500 hover:bg-zinc-800/50'
-            }`}
+            className={`relative flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 ${isSelected
+                ? 'border-blue-500 bg-blue-500/20 scale-105 shadow-lg shadow-blue-500/20'
+                : 'border-zinc-700 bg-zinc-900/50 hover:border-zinc-500 hover:bg-zinc-800/50'
+                }`}
         >
             {/* Selection indicator */}
             {isSelected && (
@@ -120,22 +119,22 @@ const BodyFatVisual = ({ percentage, gender, isSelected, onClick, label, descrip
                     <Check size={14} className="text-white" />
                 </div>
             )}
-            
+
             {/* Body silhouette */}
             <div className="w-16 h-24 mb-2">
                 {getBodyShape()}
             </div>
-            
+
             {/* Percentage */}
             <div className={`text-lg font-bold bg-gradient-to-r ${getCategoryColor()} bg-clip-text text-transparent`}>
                 {label}
             </div>
-            
+
             {/* Category */}
             <div className={`text-[10px] uppercase tracking-wider ${isSelected ? 'text-blue-400' : 'text-zinc-500'}`}>
                 {category}
             </div>
-            
+
             {/* Description */}
             <div className="text-[9px] text-zinc-500 mt-1 text-center leading-tight">
                 {description}
@@ -143,6 +142,16 @@ const BodyFatVisual = ({ percentage, gender, isSelected, onClick, label, descrip
         </button>
     );
 };
+
+// Default avatar options
+const DEFAULT_AVATARS = [
+    { id: 1, src: '/avatars/avatar1.jpg', name: 'Baek Yoon-Ho' },
+    { id: 2, src: '/avatars/avatar2.jpg', name: 'Sung Jin-Woo' },
+    { id: 3, src: '/avatars/avatar3.jpg', name: 'Shadow Monarch' },
+    { id: 4, src: '/avatars/avatar4.jpg', name: 'Cha Hae-In' },
+    { id: 5, src: '/avatars/avatar5.jpg', name: 'Igris' },
+    { id: 6, src: '/avatars/avatar6.jpg', name: 'Choi Jong-In' },
+];
 
 export default function Register() {
     const navigate = useNavigate();
@@ -160,7 +169,8 @@ export default function Register() {
         age: 25,
         gender: 'male',
         bodyFat: 20,
-        goal: 'maintenance'
+        goal: 'maintenance',
+        profilePicture: ''
     });
     const [errors, setErrors] = useState({});
 
@@ -200,7 +210,7 @@ export default function Register() {
         e.preventDefault();
         setLoading(true);
 
-        const result = await register({
+        const payload = {
             username: formData.username,
             email: formData.email,
             password: formData.password,
@@ -210,7 +220,13 @@ export default function Register() {
             gender: formData.gender,
             bodyFat: Number(formData.bodyFat),
             goal: formData.goal
-        });
+        };
+
+        if (formData.profilePicture) {
+            payload.profilePicture = formData.profilePicture;
+        }
+
+        const result = await register(payload);
 
         if (result.success) {
             navigate('/');
@@ -245,10 +261,10 @@ export default function Register() {
     // Get current category color
     const getCategoryInfo = () => {
         const bf = formData.bodyFat;
-        const ranges = formData.gender === 'female' 
+        const ranges = formData.gender === 'female'
             ? { essential: 15, athletic: 20, fitness: 25, average: 30 }
             : { essential: 10, athletic: 14, fitness: 19, average: 24 };
-        
+
         if (bf <= ranges.essential) return { name: 'Essential', color: 'text-cyan-400', bg: 'bg-cyan-500/20', border: 'border-cyan-500/30' };
         if (bf <= ranges.athletic) return { name: 'Athletic', color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/30' };
         if (bf <= ranges.fitness) return { name: 'Fitness', color: 'text-green-400', bg: 'bg-green-500/20', border: 'border-green-500/30' };
@@ -334,7 +350,7 @@ export default function Register() {
                             <Button
                                 type="button"
                                 onClick={handleNext}
-                                className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white border-0"
+                                className="w-full mt-4 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white border-0"
                             >
                                 Continue <ChevronRight size={18} />
                             </Button>
@@ -354,6 +370,48 @@ export default function Register() {
                                     {error}
                                 </div>
                             )}
+
+                            {/* Avatar Selection */}
+                            <div className="mb-6">
+                                <label className="text-sm uppercase tracking-wider text-zinc-400 font-medium mb-3 block">
+                                    Choose Your Avatar
+                                </label>
+                                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                                    {DEFAULT_AVATARS.map((avatar) => (
+                                        <button
+                                            key={avatar.id}
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, profilePicture: avatar.src }))}
+                                            className={`relative group rounded-2xl overflow-hidden border-2 transition-all duration-300 aspect-square ${formData.profilePicture === avatar.src
+                                                    ? 'border-blue-500 ring-2 ring-blue-500/40 scale-105 shadow-lg shadow-blue-500/20'
+                                                    : 'border-zinc-700 hover:border-zinc-500 hover:scale-102'
+                                                }`}
+                                        >
+                                            <img
+                                                src={avatar.src}
+                                                alt={avatar.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            {/* Dark overlay on hover */}
+                                            <div className={`absolute inset-0 transition-opacity ${formData.profilePicture === avatar.src
+                                                    ? 'bg-blue-500/20'
+                                                    : 'bg-black/0 group-hover:bg-black/30'
+                                                }`} />
+                                            {/* Checkmark */}
+                                            {formData.profilePicture === avatar.src && (
+                                                <div className="absolute top-1 right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-md">
+                                                    <Check size={14} className="text-white" />
+                                                </div>
+                                            )}
+                                            {/* Name tooltip */}
+                                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <p className="text-[9px] text-white text-center truncate">{avatar.name}</p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-zinc-500 text-center mt-2">Select a profile avatar (optional)</p>
+                            </div>
 
                             {/* Basic Info Row */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -424,7 +482,7 @@ export default function Register() {
                                         {category.name} • {formData.bodyFat}%
                                     </span>
                                 </div>
-                                
+
                                 {/* Visual Body Fat Grid */}
                                 <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
                                     {bodyFatRanges.map((range) => (
@@ -462,11 +520,10 @@ export default function Register() {
                                             key={goal.value}
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, goal: goal.value }))}
-                                            className={`p-3 rounded-xl border text-center transition-all ${
-                                                formData.goal === goal.value
-                                                    ? 'border-blue-500 bg-blue-500/20 text-white'
-                                                    : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-600'
-                                            }`}
+                                            className={`p-3 rounded-xl border text-center transition-all ${formData.goal === goal.value
+                                                ? 'border-blue-500 bg-blue-500/20 text-white'
+                                                : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-600'
+                                                }`}
                                         >
                                             <div className="text-sm font-medium">{goal.label}</div>
                                             <div className="text-[10px] opacity-60">{goal.desc}</div>
@@ -488,7 +545,7 @@ export default function Register() {
                                 <Button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white border-0"
+                                    className="flex-1 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white border-0"
                                 >
                                     {loading ? 'Creating...' : 'Start Journey'} <ChevronRight size={18} />
                                 </Button>

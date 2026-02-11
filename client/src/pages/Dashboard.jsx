@@ -12,7 +12,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Flame, Utensils, Target, TrendingUp, TrendingDown, Activity, Zap, Clock, Dumbbell, Scale, Footprints } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Flame, Utensils, Target, TrendingUp, TrendingDown, Activity, Zap, Clock, Dumbbell, Scale, Footprints, Trophy, X, Crown, Medal } from 'lucide-react';
 import {
     AreaChart,
     Area,
@@ -36,8 +37,12 @@ import NavBar from '../components/NavBar';
 
 export default function Dashboard() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showLeaderboard, setShowLeaderboard] = useState(false);
+    const [leaderboard, setLeaderboard] = useState([]);
+    const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
     // Fetch user stats on mount
     useEffect(() => {
@@ -55,6 +60,37 @@ export default function Dashboard() {
         fetchStats();
     }, []);
 
+    // Fetch leaderboard data
+    const fetchLeaderboard = async () => {
+        setLoadingLeaderboard(true);
+        try {
+            const response = await userAPI.getLeaderboard();
+            setLeaderboard(response.data.leaderboard || []);
+        } catch (error) {
+            console.error('Failed to fetch leaderboard:', error);
+        } finally {
+            setLoadingLeaderboard(false);
+        }
+    };
+
+    const handleOpenLeaderboard = () => {
+        setShowLeaderboard(true);
+        fetchLeaderboard();
+    };
+
+    // Leaderboard helpers
+    const getRankMedal = (rank) => {
+        if (rank === 1) return <Crown size={20} className="text-yellow-400" />;
+        if (rank === 2) return <Medal size={20} className="text-zinc-300" />;
+        if (rank === 3) return <Medal size={20} className="text-amber-600" />;
+        return <span className="text-sm font-mono text-zinc-500 w-5 text-center">{rank}</span>;
+    };
+
+    const getRankColor = (rank) => {
+        const colors = { 'E': 'text-zinc-400', 'D': 'text-green-400', 'C': 'text-blue-400', 'B': 'text-purple-400', 'A': 'text-orange-400', 'S': 'text-red-400', 'NATIONAL': 'text-yellow-400' };
+        return colors[rank] || 'text-zinc-400';
+    };
+
     if (loading) {
         return <LoadingScreen />;
     }
@@ -63,7 +99,7 @@ export default function Dashboard() {
     const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const today = new Date();
     const dayOfWeek = today.getDay();
-    
+
     // Process weekly data for comprehensive analysis
     const weeklyChartData = weekDays.map((day, index) => {
         // Get meal data for this day
@@ -109,7 +145,7 @@ export default function Dashboard() {
     // Activity insights based on user data
     const getActivityInsights = () => {
         const insights = [];
-        
+
         const dailyGoal = user?.dailyBurnGoal || 500;
         const calorieGoal = user?.dailyCalorieGoal || 2000;
         const todayBurned = stats?.today?.caloriesBurned || 0;
@@ -167,7 +203,28 @@ export default function Dashboard() {
                         </span>
                     </div>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 ring-2 ring-black ring-offset-2 ring-offset-zinc-800" />
+                <div className="flex items-center gap-3">
+                    {/* Leaderboard Button */}
+                    <button
+                        onClick={handleOpenLeaderboard}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600/20 to-yellow-600/20 border border-amber-500/30 rounded-xl text-amber-400 hover:from-amber-600/30 hover:to-yellow-600/30 transition-all text-sm font-medium"
+                    >
+                        <Trophy size={16} />
+                        <span className="hidden sm:inline">Leaderboard</span>
+                    </button>
+                    {/* Profile Avatar - clickable to Profile page */}
+                    <button onClick={() => navigate('/profile')} className="focus:outline-none">
+                        {user?.profilePicture ? (
+                            <img
+                                src={user.profilePicture}
+                                alt="Profile"
+                                className="h-10 w-10 rounded-full ring-2 ring-black ring-offset-2 ring-offset-zinc-800 object-cover hover:ring-blue-500 transition-all"
+                            />
+                        ) : (
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 ring-2 ring-black ring-offset-2 ring-offset-zinc-800 hover:ring-blue-500 transition-all" />
+                        )}
+                    </button>
+                </div>
             </header>
 
             {/* Main Content */}
@@ -258,7 +315,7 @@ export default function Dashboard() {
                                                 name === 'intake' ? 'Calories Intake' : 'Calories Burned'
                                             ]}
                                         />
-                                        <Legend 
+                                        <Legend
                                             wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
                                             formatter={(value) => value === 'intake' ? '🍽️ Calories Intake' : '🔥 Calories Burned'}
                                         />
@@ -295,13 +352,12 @@ export default function Dashboard() {
                             <Card title="Activity Insights" className="border-purple-500/20 bg-gradient-to-br from-purple-950/10 to-indigo-950/5">
                                 <div className="space-y-3">
                                     {insights.map((insight, idx) => (
-                                        <div 
+                                        <div
                                             key={idx}
-                                            className={`flex items-center gap-3 p-3 rounded-xl ${
-                                                insight.type === 'success' ? 'bg-green-500/10 border border-green-500/20 text-green-400' :
+                                            className={`flex items-center gap-3 p-3 rounded-xl ${insight.type === 'success' ? 'bg-green-500/10 border border-green-500/20 text-green-400' :
                                                 insight.type === 'warning' ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400' :
-                                                'bg-blue-500/10 border border-blue-500/20 text-blue-400'
-                                            }`}
+                                                    'bg-blue-500/10 border border-blue-500/20 text-blue-400'
+                                                }`}
                                         >
                                             {insight.icon}
                                             <span className="text-sm">{insight.text}</span>
@@ -358,6 +414,104 @@ export default function Dashboard() {
                     </div>
                 </div>
             </main>
+
+            {/* Leaderboard Modal */}
+            {showLeaderboard && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-zinc-900 w-full max-w-md rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-5 border-b border-white/10 bg-gradient-to-r from-amber-950/30 to-yellow-950/20">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/30 to-yellow-500/30 flex items-center justify-center">
+                                    <Trophy size={22} className="text-amber-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold">Leaderboard</h2>
+                                    <p className="text-xs text-zinc-500">Top players by XP</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowLeaderboard(false)}
+                                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Leaderboard Content */}
+                        <div className="p-4 max-h-[60vh] overflow-y-auto">
+                            {loadingLeaderboard ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+                                </div>
+                            ) : leaderboard.length === 0 ? (
+                                <div className="text-center py-12 text-zinc-500">
+                                    <Trophy size={48} className="mx-auto mb-4 opacity-30" />
+                                    <p>No players yet</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {leaderboard.map((entry) => {
+                                        const isCurrentUser = entry.username === user?.username;
+                                        return (
+                                            <div
+                                                key={entry.rank}
+                                                className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isCurrentUser
+                                                    ? 'bg-amber-500/10 border border-amber-500/30 ring-1 ring-amber-500/20'
+                                                    : entry.rank <= 3
+                                                        ? 'bg-zinc-800/50 border border-white/5'
+                                                        : 'bg-zinc-900/50 border border-white/5 hover:bg-zinc-800/30'
+                                                    }`}
+                                            >
+                                                {/* Rank */}
+                                                <div className="w-8 flex items-center justify-center">
+                                                    {getRankMedal(entry.rank)}
+                                                </div>
+
+                                                {/* Avatar */}
+                                                {entry.profilePicture ? (
+                                                    <img src={entry.profilePicture} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-zinc-700" />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-sm font-bold">
+                                                        {entry.username.charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
+
+                                                {/* Info */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`font-medium truncate ${isCurrentUser ? 'text-amber-300' : ''}`}>
+                                                            {entry.username}
+                                                            {isCurrentUser && <span className="text-xs ml-1 opacity-60">(you)</span>}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                                        <span className={`font-medium ${getRankColor(entry.level?.rank)}`}>
+                                                            {entry.level?.rank || 'E'} Rank
+                                                        </span>
+                                                        {entry.streak > 0 && (
+                                                            <>
+                                                                <span>•</span>
+                                                                <span className="text-orange-400">🔥 {entry.streak}d</span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* XP */}
+                                                <div className="text-right">
+                                                    <div className="text-sm font-bold text-amber-400">{entry.xp.toLocaleString()}</div>
+                                                    <div className="text-[10px] text-zinc-500 uppercase">XP</div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <NavBar />
         </div>

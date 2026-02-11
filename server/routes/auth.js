@@ -69,7 +69,7 @@ router.post(
                 });
             }
 
-            const { username, email, password, height, weight, age, gender, bodyFat, goal } = req.body;
+            const { username, email, password, height, weight, age, gender, bodyFat, goal, profilePicture } = req.body;
 
             // Check if user already exists
             let user = await User.findOne({
@@ -93,7 +93,8 @@ router.post(
                 age: age || 25,
                 gender: gender || 'male',
                 bodyFat: bodyFat || 20,
-                goal: goal || 'maintenance'
+                goal: goal || 'maintenance',
+                profilePicture: profilePicture || ''
             });
 
             // Generate JWT token
@@ -115,7 +116,8 @@ router.post(
                     xp: user.xp,
                     streak: user.streak,
                     dailyCalorieGoal: user.dailyCalorieGoal,
-                    dailyBurnGoal: user.dailyBurnGoal
+                    dailyBurnGoal: user.dailyBurnGoal,
+                    profilePicture: user.profilePicture || ''
                 }
             });
 
@@ -229,7 +231,8 @@ router.post(
                     streak: user.streak,
                     goal: user.goal,
                     dailyCalorieGoal: user.dailyCalorieGoal,
-                    dailyBurnGoal: user.dailyBurnGoal
+                    dailyBurnGoal: user.dailyBurnGoal,
+                    profilePicture: user.profilePicture || ''
                 }
             });
 
@@ -272,6 +275,7 @@ router.get('/me', protect, async (req, res) => {
                 goal: user.goal,
                 dailyCalorieGoal: user.dailyCalorieGoal,
                 dailyBurnGoal: user.dailyBurnGoal,
+                profilePicture: user.profilePicture || '',
                 level: user.getLevel()  // Using the instance method
             }
         });

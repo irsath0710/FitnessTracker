@@ -34,7 +34,7 @@ export default function Nutrition() {
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(true);
     const [notification, setNotification] = useState(null);
-    
+
     // Search state
     const [showAddModal, setShowAddModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -42,7 +42,7 @@ export default function Nutrition() {
     const [commonFoods, setCommonFoods] = useState([]);
     const [searching, setSearching] = useState(false);
     const [activeTab, setActiveTab] = useState('search'); // 'search' or 'common'
-    
+
     // Selected food state
     const [selectedFood, setSelectedFood] = useState(null);
     const [quantity, setQuantity] = useState(1);
@@ -79,7 +79,7 @@ export default function Nutrition() {
                 setSearchResults([]);
                 return;
             }
-            
+
             setSearching(true);
             try {
                 const response = await mealAPI.search(debouncedSearch);
@@ -186,7 +186,7 @@ export default function Nutrition() {
             }));
 
             setNotification({ type: 'success', message: `${selectedFood.name} logged! +${nutrition.calories} kcal` });
-            
+
             // Reset
             setShowAddModal(false);
             setSelectedFood(null);
@@ -254,12 +254,11 @@ export default function Nutrition() {
                             <div className="text-4xl font-bold font-mono">{caloriesConsumed}</div>
                             <div className="text-xs text-zinc-400">of {calorieGoal} kcal goal</div>
                         </div>
-                        <div className={`text-sm px-4 py-2 rounded-full font-medium ${
-                            caloriesConsumed > calorieGoal 
-                                ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
+                        <div className={`text-sm px-4 py-2 rounded-full font-medium ${caloriesConsumed > calorieGoal
+                                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                                 : 'bg-green-500/20 text-green-400 border border-green-500/30'
-                        }`}>
-                            {calorieGoal - caloriesConsumed > 0 
+                            }`}>
+                            {calorieGoal - caloriesConsumed > 0
                                 ? `${calorieGoal - caloriesConsumed} remaining`
                                 : `${caloriesConsumed - calorieGoal} over`
                             }
@@ -268,11 +267,10 @@ export default function Nutrition() {
 
                     {/* Progress bar */}
                     <div className="h-3 bg-zinc-800 rounded-full overflow-hidden mb-6">
-                        <div 
-                            className={`h-full transition-all duration-500 ${
-                                caloriesConsumed > calorieGoal ? 'bg-red-500' : 'bg-gradient-to-r from-green-500 to-emerald-400'
-                            }`} 
-                            style={{ width: `${calorieProgress}%` }} 
+                        <div
+                            className={`h-full transition-all duration-500 ${caloriesConsumed > calorieGoal ? 'bg-red-500' : 'bg-gradient-to-r from-green-500 to-emerald-400'
+                                }`}
+                            style={{ width: `${calorieProgress}%` }}
                         />
                     </div>
 
@@ -302,10 +300,10 @@ export default function Nutrition() {
                 </Card>
 
                 {/* Add Food Button */}
-                <Button 
-                    variant="system" 
-                    onClick={() => setShowAddModal(true)} 
-                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 border-0"
+                <Button
+                    variant="system"
+                    onClick={() => setShowAddModal(true)}
+                    className="w-full bg-gradient-to-r from-purple-600 to-violet-500 hover:from-purple-500 hover:to-violet-400 border-0 text-white"
                 >
                     <Plus size={20} /> Log Food
                 </Button>
@@ -320,10 +318,10 @@ export default function Nutrition() {
                             <p className="text-sm mt-1">Tap "Log Food" to add your first meal</p>
                         </div>
                     ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
                             {meals.map(meal => (
-                                <div 
-                                    key={meal._id} 
+                                <div
+                                    key={meal._id}
                                     className="flex justify-between items-center p-4 bg-zinc-900/50 rounded-2xl border border-white/5 group hover:border-green-500/20 transition-all"
                                 >
                                     <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -346,8 +344,8 @@ export default function Nutrition() {
                                                 P:{meal.protein}g C:{meal.carbs}g F:{meal.fats}g
                                             </div>
                                         </div>
-                                        <button 
-                                            onClick={() => handleDelete(meal._id)} 
+                                        <button
+                                            onClick={() => handleDelete(meal._id)}
                                             className="opacity-0 group-hover:opacity-100 text-red-400 p-2 hover:bg-red-500/10 rounded-lg transition-all"
                                         >
                                             <Trash2 size={18} />
@@ -369,7 +367,7 @@ export default function Nutrition() {
                             <h2 className="text-lg font-bold">
                                 {selectedFood ? 'Add Food' : 'Search Food'}
                             </h2>
-                            <button 
+                            <button
                                 onClick={() => {
                                     setShowAddModal(false);
                                     setSelectedFood(null);
@@ -407,17 +405,15 @@ export default function Nutrition() {
                                     <div className="flex bg-zinc-800 rounded-lg p-1">
                                         <button
                                             onClick={() => setActiveTab('search')}
-                                            className={`flex-1 py-2 rounded-md text-sm transition-all ${
-                                                activeTab === 'search' ? 'bg-green-500 text-white' : 'text-zinc-400'
-                                            }`}
+                                            className={`flex-1 py-2 rounded-md text-sm transition-all ${activeTab === 'search' ? 'bg-green-500 text-white' : 'text-zinc-400'
+                                                }`}
                                         >
                                             Search Results
                                         </button>
                                         <button
                                             onClick={() => setActiveTab('common')}
-                                            className={`flex-1 py-2 rounded-md text-sm transition-all ${
-                                                activeTab === 'common' ? 'bg-green-500 text-white' : 'text-zinc-400'
-                                            }`}
+                                            className={`flex-1 py-2 rounded-md text-sm transition-all ${activeTab === 'common' ? 'bg-green-500 text-white' : 'text-zinc-400'
+                                                }`}
                                         >
                                             Common Foods
                                         </button>
@@ -535,11 +531,10 @@ export default function Nutrition() {
                                                 <button
                                                     key={type}
                                                     onClick={() => setMealType(type)}
-                                                    className={`py-2 rounded-xl text-sm capitalize transition-all ${
-                                                        mealType === type
+                                                    className={`py-2 rounded-xl text-sm capitalize transition-all ${mealType === type
                                                             ? 'bg-green-500 text-white'
                                                             : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {type}
                                                 </button>
@@ -591,7 +586,7 @@ export default function Nutrition() {
                                             variant="system"
                                             onClick={handleSubmit}
                                             disabled={submitting || !nutrition?.calories}
-                                            className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600"
+                                            className="flex-1 bg-gradient-to-r from-purple-600 to-violet-500 hover:from-purple-500 hover:to-violet-400 text-white"
                                         >
                                             {submitting ? 'Adding...' : `Add ${nutrition?.calories || 0} kcal`}
                                         </Button>

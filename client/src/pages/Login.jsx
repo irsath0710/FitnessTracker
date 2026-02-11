@@ -56,6 +56,10 @@ export default function Login() {
             <div className="w-full max-w-md z-10">
                 {/* Header */}
                 <div className="mb-12 text-center">
+                    <div className="relative w-24 h-24 mx-auto mb-6">
+                        <div className="absolute inset-0 bg-blue-500/30 blur-2xl rounded-full" />
+                        <img src="/logo.png" alt="Level Up Logo" className="relative w-full h-full object-contain drop-shadow-2xl" />
+                    </div>
                     <h1 className="text-6xl font-black italic tracking-tighter mb-4 bg-gradient-to-br from-white to-zinc-500 bg-clip-text text-transparent">
                         LEVEL UP
                     </h1>
@@ -94,7 +98,7 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full mt-4 py-4 px-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 transition-all shadow-lg shadow-blue-900/50 disabled:opacity-50"
+                            className="w-full mt-4 py-4 px-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-emerald-600 to-green-500 text-white hover:from-emerald-500 hover:to-green-400 transition-all shadow-lg shadow-emerald-900/50 disabled:opacity-50"
                         >
                             {loading ? 'Connecting...' : 'ACCESS SYSTEM'}
                         </button>

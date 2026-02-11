@@ -134,6 +134,12 @@ const UserSchema = new mongoose.Schema({
         default: 500
     },
 
+    // Profile Picture (base64 data URL)
+    profilePicture: {
+        type: String,
+        default: ''
+    },
+
     // Timestamps
     createdAt: {
         type: Date,

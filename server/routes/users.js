@@ -53,7 +53,7 @@ router.put(
             // Fields that can be updated
             const allowedFields = [
                 'height', 'weight', 'goalWeight', 'age', 'gender', 'bodyFat',
-                'goal', 'dailyCalorieGoal', 'dailyBurnGoal'
+                'goal', 'dailyCalorieGoal', 'dailyBurnGoal', 'profilePicture'
             ];
 
             // Build update object with only allowed fields
@@ -89,6 +89,7 @@ router.put(
                     goal: user.goal,
                     dailyCalorieGoal: user.dailyCalorieGoal,
                     dailyBurnGoal: user.dailyBurnGoal,
+                    profilePicture: user.profilePicture || '',
                     level: user.getLevel()
                 }
             });
@@ -128,7 +129,7 @@ router.get('/stats', protect, async (req, res) => {
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         sevenDaysAgo.setHours(0, 0, 0, 0);
 
-        const recentWorkouts = await Workout.find({ 
+        const recentWorkouts = await Workout.find({
             userId,
             date: { $gte: sevenDaysAgo }
         }).sort({ date: -1 });
@@ -275,7 +276,7 @@ router.get('/stats', protect, async (req, res) => {
 router.get('/leaderboard', protect, async (req, res) => {
     try {
         const topUsers = await User.find({})
-            .select('username xp streak')
+            .select('username xp streak profilePicture')
             .sort({ xp: -1 })
             .limit(10);
 
@@ -286,7 +287,8 @@ router.get('/leaderboard', protect, async (req, res) => {
                 username: user.username,
                 xp: user.xp,
                 streak: user.streak,
-                level: user.getLevel()
+                level: user.getLevel(),
+                profilePicture: user.profilePicture || ''
             }))
         });
 
