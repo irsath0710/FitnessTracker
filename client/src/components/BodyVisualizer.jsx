@@ -303,8 +303,8 @@ export default function BodyVisualizer({ weight = 70, bodyFat = 20, gender = 'ma
                             angle={0.5}
                         />
 
-                        {/* The 3D Human Model */}
-                        <HumanModel gender={gender} weight={weight} bodyFat={bodyFat} height={height} />
+                        {/* The 3D Human Model - key forces remount on gender change */}
+                        <HumanModel key={gender} gender={gender} weight={weight} bodyFat={bodyFat} height={height} />
 
                         {/* Scanner effect */}
                         <ScanLine />

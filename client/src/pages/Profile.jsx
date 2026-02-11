@@ -40,6 +40,7 @@ export default function Profile() {
         height: user?.height || 170,
         goalWeight: user?.goalWeight || user?.weight || 70,
         bodyFat: user?.bodyFat || 20,
+        gender: user?.gender || 'male',
         dailyCalorieGoal: user?.dailyCalorieGoal || 2000,
         dailyBurnGoal: user?.dailyBurnGoal || 500
     });
@@ -52,6 +53,7 @@ export default function Profile() {
                 height: user.height || 170,
                 goalWeight: user.goalWeight || user.weight || 70,
                 bodyFat: user.bodyFat || 20,
+                gender: user.gender || 'male',
                 dailyCalorieGoal: user.dailyCalorieGoal || 2000,
                 dailyBurnGoal: user.dailyBurnGoal || 500
             });
@@ -111,6 +113,7 @@ export default function Profile() {
                 height: Number(formData.height),
                 goalWeight: Number(formData.goalWeight),
                 bodyFat: Number(formData.bodyFat),
+                gender: formData.gender,
                 dailyCalorieGoal: Number(formData.dailyCalorieGoal),
                 dailyBurnGoal: Number(formData.dailyBurnGoal)
             };
@@ -341,6 +344,33 @@ export default function Profile() {
                                 onChange={(e) => setFormData({ ...formData, goalWeight: Number(e.target.value) })}
                                 className="w-full accent-green-500"
                             />
+                        </div>
+
+                        {/* Gender */}
+                        <div>
+                            <div className="flex justify-between mb-2">
+                                <span className="text-sm text-zinc-400 flex items-center gap-2">
+                                    <User size={14} className="text-pink-400" /> Gender
+                                </span>
+                                <span className="text-lg font-mono font-bold capitalize">{formData.gender}</span>
+                            </div>
+                            <div className="flex gap-2">
+                                {['male', 'female'].map((g) => (
+                                    <button
+                                        key={g}
+                                        onClick={() => setFormData({ ...formData, gender: g })}
+                                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                                            formData.gender === g
+                                                ? g === 'male'
+                                                    ? 'bg-blue-600/30 border border-blue-500 text-blue-400'
+                                                    : 'bg-pink-600/30 border border-pink-500 text-pink-400'
+                                                : 'bg-zinc-800 border border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                        }`}
+                                    >
+                                        {g === 'male' ? '♂ Male' : '♀ Female'}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Body Fat */}
