@@ -19,17 +19,18 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { DataCacheProvider } from './context/DataCacheContext';
 import { LoadingScreen } from './components/ui';
 import ErrorBoundary from './components/ErrorBoundary';
 import InstallPWA from './components/InstallPWA';
 
-// Pages (lazy loaded for better performance)
-const Login = React.lazy(() => import('./pages/Login'));
-const Register = React.lazy(() => import('./pages/Register'));
-const Dashboard = React.lazy(() => import('./pages/Dashboard'));
-const Workout = React.lazy(() => import('./pages/Workout'));
-const Nutrition = React.lazy(() => import('./pages/Nutrition'));
-const Profile = React.lazy(() => import('./pages/Profile'));
+// Direct imports for instant navigation
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Workout from './pages/Workout';
+import Nutrition from './pages/Nutrition';
+import Profile from './pages/Profile';
 
 /**
  * ProtectedRoute Component
@@ -147,10 +148,10 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
-          <React.Suspense fallback={<LoadingScreen />}>
+          <DataCacheProvider>
             <AppRoutes />
             <InstallPWA />
-          </React.Suspense>
+          </DataCacheProvider>
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>

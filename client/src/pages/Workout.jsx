@@ -11,15 +11,18 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, ChevronRight, Trophy, Clock, Flame, Hash, Timer, Dumbbell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useDataCache } from '../context/DataCacheContext';
 import { workoutAPI } from '../services/api';
 import { Card, Button, Input, Toast } from '../components/ui';
 import NavBar from '../components/NavBar';
 
 export default function Workout() {
     const { user, updateUser } = useAuth();
-    const [workoutTypes, setWorkoutTypes] = useState([]);
-    const [recentWorkouts, setRecentWorkouts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { getCached, fetchWorkout, invalidate } = useDataCache();
+    const cached = getCached('workout');
+    const [workoutTypes, setWorkoutTypes] = useState(cached?.types || []);
+    const [recentWorkouts, setRecentWorkouts] = useState(cached?.recent || []);
+    const [loading, setLoading] = useState(!cached);
     const [showForm, setShowForm] = useState(false);
     const [selectedType, setSelectedType] = useState(null);
     const [activeTab, setActiveTab] = useState('time'); // 'time' or 'count'
@@ -32,24 +35,15 @@ export default function Workout() {
     const [submitting, setSubmitting] = useState(false);
     const [notification, setNotification] = useState(null);
 
-    // Fetch workout types and recent workouts
+    // Fetch workout data — cached data renders instantly
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [typesRes, workoutsRes] = await Promise.all([
-                    workoutAPI.getTypes(),
-                    workoutAPI.getAll({ limit: 5 })
-                ]);
-                setWorkoutTypes(typesRes.data.types);
-                setRecentWorkouts(workoutsRes.data.workouts);
-            } catch (error) {
-                console.error('Failed to fetch workout data:', error);
-            } finally {
-                setLoading(false);
+        fetchWorkout().then(data => {
+            if (data) {
+                setWorkoutTypes(data.types);
+                setRecentWorkouts(data.recent);
             }
-        };
-
-        fetchData();
+            setLoading(false);
+        });
     }, []);
 
     // Filter workouts by type
@@ -113,6 +107,10 @@ export default function Workout() {
 
             // Add to recent workouts
             setRecentWorkouts(prev => [response.data.workout, ...prev.slice(0, 4)]);
+
+            // Mark caches stale so they refresh on next visit
+            invalidate('workout');
+            invalidate('dashboard');
 
             // Show success notification
             setNotification({

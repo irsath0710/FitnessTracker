@@ -14,6 +14,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, Trash2, Utensils, Flame, Beef, Wheat, Droplet, Leaf, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useDataCache } from '../context/DataCacheContext';
 import { mealAPI } from '../services/api';
 import { Card, Button, Input, Toast } from '../components/ui';
 import NavBar from '../components/NavBar';
@@ -30,9 +31,11 @@ function useDebounce(value, delay) {
 
 export default function Nutrition() {
     const { user } = useAuth();
-    const [meals, setMeals] = useState([]);
-    const [summary, setSummary] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { getCached, fetchNutrition, invalidate } = useDataCache();
+    const cached = getCached('nutrition');
+    const [meals, setMeals] = useState(cached?.meals || []);
+    const [summary, setSummary] = useState(cached?.summary || null);
+    const [loading, setLoading] = useState(!cached);
     const [notification, setNotification] = useState(null);
 
     // Search state
@@ -52,24 +55,16 @@ export default function Nutrition() {
 
     const debouncedSearch = useDebounce(searchQuery, 500);
 
-    // Fetch today's meals
+    // Fetch meals — cached data renders instantly
     useEffect(() => {
-        const fetchMeals = async () => {
-            try {
-                const [mealsRes, commonRes] = await Promise.all([
-                    mealAPI.getToday(),
-                    mealAPI.getCommon()
-                ]);
-                setMeals(mealsRes.data.meals);
-                setSummary(mealsRes.data.summary);
-                setCommonFoods(commonRes.data.foods || []);
-            } catch (error) {
-                console.error('Failed to fetch meals:', error);
-            } finally {
-                setLoading(false);
+        fetchNutrition().then(data => {
+            if (data) {
+                setMeals(data.meals);
+                setSummary(data.summary);
+                setCommonFoods(data.commonFoods);
             }
-        };
-        fetchMeals();
+            setLoading(false);
+        });
     }, []);
 
     // Search foods when query changes
@@ -187,6 +182,10 @@ export default function Nutrition() {
 
             setNotification({ type: 'success', message: `${selectedFood.name} logged! +${nutrition.calories} kcal` });
 
+            // Mark caches stale
+            invalidate('nutrition');
+            invalidate('dashboard');
+
             // Reset
             setShowAddModal(false);
             setSelectedFood(null);
@@ -205,6 +204,8 @@ export default function Nutrition() {
             const meal = meals.find(m => m._id === mealId);
             await mealAPI.delete(mealId);
             setMeals(prev => prev.filter(m => m._id !== mealId));
+            invalidate('nutrition');
+            invalidate('dashboard');
             if (meal) {
                 setSummary(prev => ({
                     ...prev,

@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { Flame, Utensils, Target, TrendingUp, TrendingDown, Activity, Zap, Clock, Dumbbell, Scale, Footprints, Trophy, X, Crown, Medal } from 'lucide-react';
 import WeeklyChart from '../components/WeeklyChart';
 import { useAuth } from '../context/AuthContext';
+import { useDataCache } from '../context/DataCacheContext';
 import { userAPI, progressAPI } from '../services/api';
 import { Card, StatCard, LoadingScreen } from '../components/ui';
 import RankBadge from '../components/RankBadge';
@@ -25,26 +26,20 @@ import NavBar from '../components/NavBar';
 export default function Dashboard() {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [stats, setStats] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { getCached, fetchDashboard } = useDataCache();
+    const cached = getCached('dashboard');
+    const [stats, setStats] = useState(cached);
+    const [loading, setLoading] = useState(!cached);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
     const [leaderboard, setLeaderboard] = useState([]);
     const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
-    // Fetch user stats on mount
+    // Fetch stats — shows cached data instantly, refreshes in background
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const response = await userAPI.getStats();
-                setStats(response.data.stats);
-            } catch (error) {
-                console.error('Failed to fetch stats:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchStats();
+        fetchDashboard().then(data => {
+            if (data) setStats(data);
+            setLoading(false);
+        });
     }, []);
 
     // Fetch leaderboard data
