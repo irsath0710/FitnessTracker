@@ -14,20 +14,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Flame, Utensils, Target, TrendingUp, TrendingDown, Activity, Zap, Clock, Dumbbell, Scale, Footprints, Trophy, X, Crown, Medal } from 'lucide-react';
-import {
-    AreaChart,
-    Area,
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    LineChart,
-    Line,
-    Legend
-} from 'recharts';
+import WeeklyChart from '../components/WeeklyChart';
 import { useAuth } from '../context/AuthContext';
 import { userAPI, progressAPI } from '../services/api';
 import { Card, StatCard, LoadingScreen } from '../components/ui';
@@ -273,57 +260,7 @@ export default function Dashboard() {
 
                         {/* Activity Chart - Enhanced with Intake vs Burn */}
                         <Card title="Weekly Activity Analysis" className="min-h-[320px]">
-                            <div className="h-64 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={weeklyChartData} barCategoryGap="20%">
-                                        <defs>
-                                            <linearGradient id="colorIntake" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-                                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0.3} />
-                                            </linearGradient>
-                                            <linearGradient id="colorBurned" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#f97316" stopOpacity={0.8} />
-                                                <stop offset="95%" stopColor="#f97316" stopOpacity={0.3} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                                        <XAxis
-                                            dataKey="day"
-                                            stroke="#525252"
-                                            fontSize={10}
-                                            tickLine={false}
-                                            axisLine={false}
-                                        />
-                                        <YAxis
-                                            stroke="#525252"
-                                            fontSize={10}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            tickFormatter={(v) => `${v}`}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: '#09090b',
-                                                borderColor: '#27272a',
-                                                borderRadius: '12px',
-                                                fontSize: '12px',
-                                                padding: '12px'
-                                            }}
-                                            itemStyle={{ color: '#fff' }}
-                                            formatter={(value, name) => [
-                                                `${value} kcal`,
-                                                name === 'intake' ? 'Calories Intake' : 'Calories Burned'
-                                            ]}
-                                        />
-                                        <Legend
-                                            wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
-                                            formatter={(value) => value === 'intake' ? '🍽️ Calories Intake' : '🔥 Calories Burned'}
-                                        />
-                                        <Bar dataKey="intake" fill="url(#colorIntake)" radius={[4, 4, 0, 0]} name="intake" />
-                                        <Bar dataKey="burned" fill="url(#colorBurned)" radius={[4, 4, 0, 0]} name="burned" />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
+                            <WeeklyChart data={weeklyChartData} />
                             {/* Weekly Summary Stats */}
                             <div className="grid grid-cols-4 gap-3 mt-4 pt-4 border-t border-white/5">
                                 <div className="text-center">
