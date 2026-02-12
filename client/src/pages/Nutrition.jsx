@@ -360,8 +360,8 @@ export default function Nutrition() {
 
             {/* Add Food Modal */}
             {showAddModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center">
-                    <div className="bg-zinc-900 w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl max-h-[90vh] overflow-hidden border border-white/10">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center">
+                    <div className="bg-zinc-900 w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl max-h-[80vh] sm:max-h-[90vh] mb-24 sm:mb-0 overflow-hidden border border-white/10 flex flex-col">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between p-4 border-b border-white/10">
                             <h2 className="text-lg font-bold">
@@ -379,7 +379,7 @@ export default function Nutrition() {
                             </button>
                         </div>
 
-                        <div className="overflow-y-auto max-h-[calc(90vh-60px)]">
+                        <div className="overflow-y-auto flex-1 min-h-0">
                             {!selectedFood ? (
                                 /* Search View */
                                 <div className="p-4 space-y-4">
@@ -573,27 +573,30 @@ export default function Nutrition() {
                                         </div>
                                     )}
 
-                                    {/* Actions */}
-                                    <div className="flex gap-3 pt-2">
-                                        <Button
-                                            variant="secondary"
-                                            onClick={() => setSelectedFood(null)}
-                                            className="flex-1"
-                                        >
-                                            Back
-                                        </Button>
-                                        <Button
-                                            variant="system"
-                                            onClick={handleSubmit}
-                                            disabled={submitting || !nutrition?.calories}
-                                            className="flex-1 bg-gradient-to-r from-purple-600 to-violet-500 hover:from-purple-500 hover:to-violet-400 text-white"
-                                        >
-                                            {submitting ? 'Adding...' : `Add ${nutrition?.calories || 0} kcal`}
-                                        </Button>
-                                    </div>
                                 </div>
                             )}
                         </div>
+
+                        {/* Sticky Actions Footer */}
+                        {selectedFood && (
+                            <div className="flex gap-3 p-4 border-t border-white/10 bg-zinc-900 shrink-0">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => setSelectedFood(null)}
+                                    className="flex-1"
+                                >
+                                    Back
+                                </Button>
+                                <Button
+                                    variant="system"
+                                    onClick={handleSubmit}
+                                    disabled={submitting || !nutrition?.calories}
+                                    className="flex-1 bg-gradient-to-r from-purple-600 to-violet-500 hover:from-purple-500 hover:to-violet-400 text-white"
+                                >
+                                    {submitting ? 'Adding...' : `Add ${nutrition?.calories || 0} kcal`}
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

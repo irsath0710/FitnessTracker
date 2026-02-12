@@ -340,7 +340,7 @@ export default function Workout() {
                                     variant="system"
                                     onClick={handleSubmitWorkout}
                                     disabled={submitting}
-                                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
+                                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white"
                                 >
                                     {submitting ? 'Logging...' : '✓ Complete Quest'}
                                 </Button>

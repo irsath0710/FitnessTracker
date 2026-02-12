@@ -22,9 +22,6 @@ function NavIcon({ icon, active, onClick }) {
             className={`p-3 rounded-full transition-all duration-300 relative group ${active ? 'text-white bg-white/10' : 'text-zinc-500 hover:text-zinc-300'
                 }`}
         >
-            {active && (
-                <span className="absolute -top-1 right-0 w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_#3b82f6]" />
-            )}
             {React.cloneElement(icon, { size: 24, strokeWidth: active ? 2.5 : 2 })}
         </button>
     );

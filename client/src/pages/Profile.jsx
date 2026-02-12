@@ -425,7 +425,7 @@ export default function Profile() {
                     variant="system"
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white"
                 >
                     <Save size={18} /> {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
