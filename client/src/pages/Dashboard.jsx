@@ -91,7 +91,7 @@ export default function Dashboard() {
     const weeklyChartData = weekDays.map((day, index) => {
         // Get meal data for this day
         const mealData = stats?.weekly?.meals?.find(m => {
-            const mealDay = new Date(m.date).getDay();
+            const mealDay = new Date(m._id).getDay();
             const adjustedIndex = (index + 1) % 7; // Mon = 1, Sun = 0
             return mealDay === adjustedIndex;
         });
@@ -103,7 +103,7 @@ export default function Dashboard() {
             return workoutDay === adjustedIndex;
         });
 
-        const intake = mealData?.calories || 0;
+        const intake = mealData?.totalCalories || 0;
         const burned = workoutData?.totalCalories || 0;
         const netCalories = intake - burned;
 
