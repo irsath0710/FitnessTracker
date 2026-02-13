@@ -114,16 +114,6 @@ function HumanModel({ gender = 'male', weight = 70, bodyFat = 20, height = 170, 
         return clone;
     }, [scene, skinColor, bodyColor]);
 
-    // Normalize model size so both male & female fit the same viewport
-    const normalizeScale = useMemo(() => {
-        const box = new THREE.Box3().setFromObject(scene);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        // Target height of ~2 units so the model fits the camera view
-        const targetHeight = 2;
-        return targetHeight / (size.y || 1);
-    }, [scene]);
-
     // Calculate scale based on height, weight, and body fat
     // Enhanced scaling for more dramatic visual differences
     const { scaleX, scaleY, scaleZ } = useMemo(() => {
@@ -145,15 +135,15 @@ function HumanModel({ gender = 'male', weight = 70, bodyFat = 20, height = 170, 
         // Slimming effect for very low body fat
         const leanFactor = bodyFat < 15 ? 0.95 + (bodyFat / 150) : 1;
 
-        // Base scale factor, normalized per model geometry
-        const baseScale = 0.9 * normalizeScale;
+        // Base scale factor
+        const baseScale = 0.9;
 
         return {
             scaleX: baseScale * weightFactor * fatScale * bellyFactor * leanFactor,
             scaleY: baseScale * heightScale,
             scaleZ: baseScale * weightFactor * fatScale * bellyFactor * leanFactor * 0.95,
         };
-    }, [height, weight, bodyFat, normalizeScale]);
+    }, [height, weight, bodyFat]);
 
     // Gentle rotation animation
     useFrame((state) => {
@@ -313,8 +303,8 @@ export default function BodyVisualizer({ weight = 70, bodyFat = 20, gender = 'ma
                             angle={0.5}
                         />
 
-                        {/* The 3D Human Model - key forces remount on gender change */}
-                        <HumanModel key={gender} gender={gender} weight={weight} bodyFat={bodyFat} height={height} />
+                        {/* The 3D Human Model */}
+                        <HumanModel gender={gender} weight={weight} bodyFat={bodyFat} height={height} />
 
                         {/* Scanner effect */}
                         <ScanLine />
@@ -324,7 +314,7 @@ export default function BodyVisualizer({ weight = 70, bodyFat = 20, gender = 'ma
                             enableZoom={!compact}
                             enablePan={false}
                             minDistance={1.5}
-                            maxDistance={4}
+                            maxDistance={8}
                             minPolarAngle={0.3}
                             maxPolarAngle={2.8}
                             autoRotate
