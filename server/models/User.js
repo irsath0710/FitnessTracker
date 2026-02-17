@@ -140,12 +140,14 @@ const UserSchema = new mongoose.Schema({
         default: ''
     },
 
-    // Streak v2 — supports XP decay and grace periods
+    // Streak v2 — supports XP decay, grace periods, and freeze
     streakData: {
         current: { type: Number, default: 0 },
         longest: { type: Number, default: 0 },
         lastActiveDate: { type: Date },
         graceUsedThisWeek: { type: Boolean, default: false },
+        freezesAvailable: { type: Number, default: 1 },
+        freezeWeekStart: { type: Date },
     },
 
     // Quest tracking (embedded — no extra collection needed)
@@ -215,6 +217,12 @@ const UserSchema = new mongoose.Schema({
     resetTokenExpiry: {
         type: Date,
         default: null
+    },
+
+    // Onboarding
+    onboardingComplete: {
+        type: Boolean,
+        default: false
     },
 
     // Timestamps

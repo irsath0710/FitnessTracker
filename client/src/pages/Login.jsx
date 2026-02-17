@@ -26,7 +26,7 @@ export default function Login() {
         setResendMsg('');
         const result = await login(formData);
         if (result.success) {
-            navigate('/');
+            navigate('/dashboard');
         } else if (result.needsVerification) {
             setVerificationNeeded(true);
             setVerificationEmail(result.email || '');

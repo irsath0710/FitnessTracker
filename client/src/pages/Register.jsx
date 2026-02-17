@@ -162,7 +162,7 @@ export default function Register() {
             if (result.needsVerification) {
                 navigate('/verify-email');
             } else {
-                navigate('/');
+                navigate('/dashboard');
             }
         }
         setLoading(false);

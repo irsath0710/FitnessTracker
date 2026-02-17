@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flame, Utensils, Target, TrendingUp, TrendingDown, Activity, Zap, Dumbbell, Trophy, X, Crown, Medal } from 'lucide-react';
+import { Flame, Utensils, Dumbbell, Trophy, Crown, Medal, Shield } from 'lucide-react';
 
 import DashboardRankBadge from '../components/DashboardRankBadge';
 import WeeklyChart from '../components/WeeklyChart';
 import QuestCard from '../components/QuestCard';
 import AnimatedCounter from '../components/AnimatedCounter';
+import OnboardingHero from '../components/OnboardingHero';
 import { useAuth } from '../context/AuthContext';
 import { useDataCache } from '../context/DataCacheContext';
 import { userAPI, questAPI, workoutAPI } from '../services/api';
-import { Card, StatCard, LoadingScreen, Modal } from '../components/ui';
+import { Card, StatCard, Skeleton, Modal } from '../components/ui';
 import { calculateLevel, getNextLevel } from '../components/RankBadge';
 import NavBar from '../components/NavBar';
 
@@ -82,7 +83,65 @@ export default function Dashboard() {
 
     const RANK_COLORS = { E: 'text-zinc-400', D: 'text-zinc-400', C: 'text-blue-400', B: 'text-blue-400', A: 'text-blue-400', S: 'text-blue-400', NATIONAL: 'text-blue-400' };
 
-    if (loading) return <LoadingScreen />;
+    if (loading) return (
+        <div className="min-h-screen bg-[var(--bg-root)] text-white pb-20">
+            <header className="px-4 py-4 max-w-5xl mx-auto border-b border-white/[0.04]">
+                <Skeleton className="h-5 w-32 mb-2" />
+                <Skeleton className="h-3 w-48" />
+            </header>
+            <main className="max-w-5xl mx-auto px-4 pt-6 space-y-6">
+                {/* XP bar */}
+                <div>
+                    <div className="flex justify-between mb-1.5">
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-3 w-14" />
+                    </div>
+                    <Skeleton className="h-1 w-full rounded-full" />
+                </div>
+                {/* Goal cards */}
+                <Card>
+                    <Skeleton className="h-3 w-20 mb-3" />
+                    <div className="space-y-2">
+                        {[1,2,3].map(i => (
+                            <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.04]">
+                                <Skeleton className="h-9 w-9 rounded-xl" />
+                                <div className="flex-1 space-y-1.5">
+                                    <Skeleton className="h-3 w-3/4" />
+                                    <Skeleton className="h-1.5 w-full rounded-full" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+                {/* Quick log */}
+                <Card>
+                    <Skeleton className="h-3 w-16 mb-3" />
+                    <div className="grid grid-cols-4 gap-2">
+                        {[1,2,3,4].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
+                    </div>
+                </Card>
+                {/* Rank badge + stats */}
+                <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4">
+                    <Skeleton className="h-40 md:w-[200px] rounded-2xl" />
+                    <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                            <Skeleton className="h-24 rounded-2xl" />
+                            <Skeleton className="h-24 rounded-2xl" />
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            {[1,2,3].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}
+                        </div>
+                    </div>
+                </div>
+                {/* Weekly chart */}
+                <Card>
+                    <Skeleton className="h-3 w-24 mb-4" />
+                    <Skeleton className="h-32 w-full rounded-xl" />
+                </Card>
+            </main>
+            <NavBar />
+        </div>
+    );
 
     // Weekly data processing
     const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -98,28 +157,6 @@ export default function Dashboard() {
     const totalBurned = weeklyChartData.reduce((s, d) => s + d.burned, 0);
     const totalWorkouts = weeklyChartData.reduce((s, d) => s + d.workouts, 0);
     const netWeekly = totalIntake - totalBurned;
-    const workoutBreakdown = stats?.workoutBreakdown || [];
-
-    // Insights
-    const insights = [];
-    const dailyGoal = user?.dailyBurnGoal || 500;
-    const todayBurned = stats?.today?.caloriesBurned || 0;
-    const todayIntake = stats?.today?.caloriesConsumed || 0;
-
-    if (todayBurned >= dailyGoal) {
-        insights.push({ type: 'success', icon: <Zap size={14} />, text: `Daily goal reached — ${todayBurned} kcal burned` });
-    } else if (todayBurned > 0) {
-        insights.push({ type: 'info', icon: <Target size={14} />, text: `${dailyGoal - todayBurned} kcal remaining to reach your goal` });
-    } else {
-        insights.push({ type: 'warning', icon: <Activity size={14} />, text: 'No activity logged today' });
-    }
-    if (todayIntake > 0 && todayBurned > 0) {
-        const bal = todayIntake - todayBurned;
-        if (bal > 500) insights.push({ type: 'warning', icon: <TrendingUp size={14} />, text: `+${bal} kcal surplus today` });
-        else if (bal < -300) insights.push({ type: 'success', icon: <TrendingDown size={14} />, text: `${Math.abs(bal)} kcal deficit — on track` });
-    }
-    if (totalWorkouts >= 5) insights.push({ type: 'success', icon: <Dumbbell size={14} />, text: `${totalWorkouts} workouts this week` });
-    if (user?.streak >= 7) insights.push({ type: 'success', icon: <Flame size={14} />, text: `${user.streak}-day streak` });
 
     const level = calculateLevel(user?.xp || 0);
     const nextLevel = getNextLevel(user?.xp || 0);
@@ -138,6 +175,12 @@ export default function Dashboard() {
                                 <Flame size={10} fill="currentColor" /> {user.streak}d
                             </span>
                         )}
+                        <span
+                            className="inline-flex items-center gap-1 text-[10px] font-medium text-sky-400 bg-sky-500/8 px-2 py-0.5 rounded-lg cursor-default"
+                            title={`${user?.streakFreezes ?? 1} freeze available this week`}
+                        >
+                            <Shield size={10} /> {user?.streakFreezes ?? 1}
+                        </span>
                         <span className="text-[10px] text-zinc-500">
                             Level {level.rank} · <AnimatedCounter value={user?.xp || 0} /> pts
                         </span>
@@ -175,14 +218,61 @@ export default function Dashboard() {
                     </div>
                 </div>
 
+                {/* ─── Onboarding Hero (new users only) ─── */}
+                {!user?.onboardingComplete && (
+                    <OnboardingHero stats={stats} quests={quests} />
+                )}
+
+                {/* ─── Active Goals ─── */}
+                {quests.length > 0 && (
+                    <div className="animate-fade-up-d1">
+                        <Card>
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-[13px] font-medium text-zinc-400">Active goals</h3>
+                                <span className="text-[11px] text-zinc-600 tabular-nums">{quests.filter(q => q.completed).length}/{quests.length}</span>
+                            </div>
+                            <div className="space-y-2">
+                                {quests.slice(0, 3).map((quest, idx) => (
+                                    <QuestCard key={quest.questId || idx} quest={quest} compact />
+                                ))}
+                            </div>
+                            {quests.length > 3 && (
+                                <button onClick={() => navigate('/quests')} className="w-full mt-3 text-xs text-blue-400 hover:text-blue-300 transition-colors text-center py-1">
+                                    View all goals →
+                                </button>
+                            )}
+                        </Card>
+                    </div>
+                )}
+
+                {/* ─── Quick Log ─── */}
+                <div className="animate-fade-up-d2">
+                    <Card>
+                        <h3 className="text-[13px] font-medium text-zinc-400 mb-3">Quick log</h3>
+                        <div className="grid grid-cols-4 gap-2">
+                            {QUICK_LOG_PRESETS.map(preset => (
+                                <button
+                                    key={preset.type}
+                                    onClick={() => handleQuickLog(preset)}
+                                    disabled={quickLogging}
+                                    className="flex flex-col items-center gap-1.5 p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl text-center hover:border-white/[0.1] hover:bg-white/[0.04] transition-all active:scale-[0.97] disabled:opacity-40"
+                                >
+                                    <span className="text-lg leading-none">{preset.icon}</span>
+                                    <span className="text-[10px] font-medium text-zinc-400">{preset.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
+
                 {/* ─── Rank Badge + Stats ─── */}
-                <div className="animate-fade-up-d1 grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 items-start">
-                    {/* Rank Badge — earned visual, not decoration */}
+                <div className="animate-fade-up-d3 grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 items-start">
+                    {/* Rank Badge */}
                     <div className="rounded-2xl border border-white/[0.05] bg-[var(--bg-surface)] flex items-center justify-center md:w-[200px]">
                         <DashboardRankBadge xp={user?.xp || 0} streak={user?.streak || 0} />
                     </div>
 
-                    {/* Stats Panel — metrics take priority */}
+                    {/* Core Stats */}
                     <div className="flex flex-col gap-3">
                         <div className="grid grid-cols-2 gap-3">
                             <StatCard icon={<Flame size={18} />} value={stats?.today?.caloriesBurned || 0} label="Burned" unit="kcal" goal={user?.dailyBurnGoal || 500} color="orange" />
@@ -205,49 +295,7 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* ─── Quick Log ─── */}
-                <div className="animate-fade-up-d2">
-                    <Card>
-                        <h3 className="text-[13px] font-medium text-zinc-400 mb-3">Quick log</h3>
-                        <div className="grid grid-cols-4 gap-2">
-                            {QUICK_LOG_PRESETS.map(preset => (
-                                <button
-                                    key={preset.type}
-                                    onClick={() => handleQuickLog(preset)}
-                                    disabled={quickLogging}
-                                    className="flex flex-col items-center gap-1.5 p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl text-center hover:border-white/[0.1] hover:bg-white/[0.04] transition-all active:scale-[0.97] disabled:opacity-40"
-                                >
-                                    <span className="text-lg leading-none">{preset.icon}</span>
-                                    <span className="text-[10px] font-medium text-zinc-400">{preset.label}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </Card>
-                </div>
-
-                {/* ─── Active Goals ─── */}
-                {quests.length > 0 && (
-                    <div className="animate-fade-up-d3">
-                        <Card>
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-[13px] font-medium text-zinc-400">Active goals</h3>
-                                <span className="text-[11px] text-zinc-600 tabular-nums">{quests.filter(q => q.completed).length}/{quests.length}</span>
-                            </div>
-                            <div className="space-y-2">
-                                {quests.slice(0, 4).map((quest, idx) => (
-                                    <QuestCard key={quest.questId || idx} quest={quest} compact />
-                                ))}
-                            </div>
-                            {quests.length > 4 && (
-                                <button onClick={() => navigate('/quests')} className="w-full mt-3 text-xs text-blue-400 hover:text-blue-300 transition-colors text-center py-1">
-                                    View all goals →
-                                </button>
-                            )}
-                        </Card>
-                    </div>
-                )}
-
-                {/* ─── Activity Chart ─── */}
+                {/* ─── Weekly Chart (condensed) ─── */}
                 <div className="animate-fade-up-d4">
                     <Card title="Weekly activity">
                         <WeeklyChart data={weeklyChartData} />
@@ -266,50 +314,6 @@ export default function Dashboard() {
                         </div>
                     </Card>
                 </div>
-
-                {/* ─── Insights ─── */}
-                {insights.length > 0 && (
-                    <Card>
-                        <h3 className="text-[13px] font-medium text-zinc-400 mb-3">Insights</h3>
-                        <div className="space-y-2">
-                            {insights.map((ins, idx) => (
-                                <div key={idx} className={`flex items-center gap-2.5 p-2.5 rounded-xl text-xs ${
-                                    ins.type === 'success' ? 'bg-emerald-500/[0.06] text-emerald-400' :
-                                    ins.type === 'warning' ? 'bg-amber-500/[0.06] text-amber-400' :
-                                    'bg-blue-500/[0.06] text-blue-400'
-                                }`}>
-                                    {ins.icon}
-                                    <span>{ins.text}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
-                )}
-
-                {/* ─── Workout Breakdown ─── */}
-                {workoutBreakdown.length > 0 && (
-                    <Card title="This week">
-                        <div className="space-y-2.5">
-                            {workoutBreakdown.slice(0, 5).map((w, idx) => (
-                                <div key={idx} className="flex items-center justify-between py-1">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-lg bg-blue-500/8 flex items-center justify-center">
-                                            <Dumbbell size={16} className="text-blue-400" />
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-medium capitalize">{w.type}</div>
-                                            <div className="text-xs text-zinc-500">{w.count} sessions</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-sm font-semibold">{w.calories}</div>
-                                        <div className="text-xs text-zinc-500">{w.duration}m</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
-                )}
 
             </main>
 

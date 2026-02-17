@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Dumbbell, User, Target, ScanLine } from 'lucide-react';
 
 const NAV_ITEMS = [
-    { path: '/', icon: LayoutDashboard, label: 'Home' },
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Home' },
     { path: '/workout', icon: Dumbbell, label: 'Workouts' },
     { path: '/body', icon: ScanLine, label: 'Body' },
     { path: '/quests', icon: Target, label: 'Goals' },

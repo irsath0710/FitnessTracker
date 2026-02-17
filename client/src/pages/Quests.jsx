@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Target, Flame, Trophy, RefreshCw } from 'lucide-react';
 import { questAPI } from '../services/api';
-import { Card, LoadingScreen } from '../components/ui';
+import { Card, Skeleton } from '../components/ui';
 import QuestCard from '../components/QuestCard';
 import NavBar from '../components/NavBar';
 
@@ -38,7 +38,46 @@ export default function Quests() {
     const totalXPAvailable = quests.reduce((sum, q) => sum + (q.completed ? 0 : q.xpReward), 0);
     const ptsEarned = quests.filter(q => q.completed).reduce((sum, q) => sum + q.xpReward, 0);
 
-    if (loading) return <LoadingScreen />;
+    if (loading) return (
+        <div className="min-h-screen bg-[#050505] text-white pb-28">
+            <header className="px-6 py-6 max-w-5xl mx-auto border-b border-white/5">
+                <Skeleton className="h-5 w-24 mb-2" />
+                <Skeleton className="h-3 w-40" />
+            </header>
+            <main className="max-w-5xl mx-auto px-4 md:px-6 pt-6 space-y-6">
+                {/* Stats banner */}
+                <div className="grid grid-cols-3 gap-3">
+                    {[1,2,3].map(i => (
+                        <div key={i} className="bg-zinc-900/50 border border-white/5 rounded-xl p-4 flex flex-col items-center gap-2">
+                            <Skeleton className="h-7 w-10" />
+                            <Skeleton className="h-2 w-12" />
+                        </div>
+                    ))}
+                </div>
+                {/* Filter tabs */}
+                <div className="flex gap-2">
+                    {[1,2,3].map(i => <Skeleton key={i} className="h-9 w-20 rounded-lg" />)}
+                </div>
+                {/* Quest cards */}
+                <div className="space-y-3">
+                    {[1,2,3].map(i => (
+                        <div key={i} className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5">
+                            <div className="flex items-center gap-3 mb-3">
+                                <Skeleton className="h-10 w-10 rounded-xl" />
+                                <div className="flex-1 space-y-1.5">
+                                    <Skeleton className="h-3.5 w-2/3" />
+                                    <Skeleton className="h-2.5 w-1/2" />
+                                </div>
+                                <Skeleton className="h-5 w-14 rounded-full" />
+                            </div>
+                            <Skeleton className="h-1.5 w-full rounded-full" />
+                        </div>
+                    ))}
+                </div>
+            </main>
+            <NavBar />
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-[#050505] text-white pb-28">

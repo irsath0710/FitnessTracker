@@ -19,6 +19,7 @@
 
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 const Workout = require('../models/Workout');
 const User = require('../models/User');
@@ -131,106 +132,117 @@ router.post(
                 });
             }
 
-            // Create workout
-            const workout = await Workout.create({
-                userId: req.user.id,
-                type: type.toLowerCase(),
-                inputType,
-                duration: duration || 0,
-                reps: reps || 0,
-                sets: sets || 1,
-                intensity: intensity || 'moderate',
-                notes
-            });
-
-            // Update user XP and streak using services
-            const user = await User.findById(req.user.id);
-
-            // Check if this is user's first workout today
-            const todayStart = new Date();
-            todayStart.setHours(0, 0, 0, 0);
-            const workoutsToday = await Workout.countDocuments({
-                userId: req.user.id,
-                date: { $gte: todayStart }
-            });
-            const isFirstToday = workoutsToday <= 1;
-
-            // Calculate XP with streak multiplier and first-of-day bonus
-            const xpResult = calculateWorkoutXP(workout.caloriesBurned, user.streak, isFirstToday);
-            const oldXP = user.xp;
-            user.xp += xpResult.totalXP;
-            workout.xpEarned = xpResult.totalXP;
-
-            // Update streak using streak service (grace period support)
-            const streakResult = updateStreak(user);
-
-            // Check for rank up
-            const rankUp = checkRankUp(oldXP, user.xp);
-
-            // Update analytics counters
-            if (!user.analytics) user.analytics = {};
-            user.analytics.totalWorkouts = (user.analytics.totalWorkouts || 0) + 1;
-            user.analytics.totalCaloriesBurned = (user.analytics.totalCaloriesBurned || 0) + workout.caloriesBurned;
-
-            user.lastWorkoutDate = new Date();
-            await Promise.all([user.save(), workout.save()]);
-
-            // Update quest progress
-            let questsCompleted = [];
+            // === Atomic transaction: workout + XP + streak + quests + progress ===
+            const session = await mongoose.startSession();
             try {
-                await refreshQuests(user);
-                // Update calorie-based quests
-                const calorieQuests = await updateQuestProgress(user, 'workout', workout.caloriesBurned);
-                // Update count-based quests
-                const countQuests = await updateQuestProgress(user, 'workout_count', 1);
-                questsCompleted = [...calorieQuests, ...countQuests];
-            } catch (questErr) {
-                console.error('Quest update error (non-fatal):', questErr.message);
-            }
+                let responseData;
+                await session.withTransaction(async () => {
+                    // Create workout
+                    const workout = new Workout({
+                        userId: req.user.id,
+                        type: type.toLowerCase(),
+                        inputType,
+                        duration: duration || 0,
+                        reps: reps || 0,
+                        sets: sets || 1,
+                        intensity: intensity || 'moderate',
+                        notes
+                    });
+                    await workout.save({ session });
 
-            // Update guild XP if user is in a guild
-            try {
-                const guild = await Guild.findOne({ 'members.user': req.user.id });
-                if (guild) {
-                    guild.totalXP += xpResult.totalXP;
-                    guild.weeklyXP += xpResult.totalXP;
-                    await guild.save();
+                    // Update user XP and streak using services
+                    const user = await User.findById(req.user.id).session(session);
+
+                    // Check if this is user's first workout today
+                    const todayStart = new Date();
+                    todayStart.setHours(0, 0, 0, 0);
+                    const workoutsToday = await Workout.countDocuments({
+                        userId: req.user.id,
+                        date: { $gte: todayStart }
+                    }).session(session);
+                    const isFirstToday = workoutsToday <= 1;
+
+                    // Calculate XP with streak multiplier and first-of-day bonus
+                    const xpResult = calculateWorkoutXP(workout.caloriesBurned, user.streak, isFirstToday);
+                    const oldXP = user.xp;
+                    user.xp += xpResult.totalXP;
+                    workout.xpEarned = xpResult.totalXP;
+
+                    // Update streak using streak service (grace period support)
+                    const streakResult = updateStreak(user);
+
+                    // Check for rank up
+                    const rankUp = checkRankUp(oldXP, user.xp);
+
+                    // Update analytics counters
+                    if (!user.analytics) user.analytics = {};
+                    user.analytics.totalWorkouts = (user.analytics.totalWorkouts || 0) + 1;
+                    user.analytics.totalCaloriesBurned = (user.analytics.totalCaloriesBurned || 0) + workout.caloriesBurned;
+
+                    // Mark onboarding complete on first workout
+                    if (user.analytics.totalWorkouts === 1) {
+                        user.onboardingComplete = true;
+                    }
+
+                    user.lastWorkoutDate = new Date();
+                    await Promise.all([user.save({ session }), workout.save({ session })]);
+
+                    // Update quest progress
+                    await refreshQuests(user, session);
+                    const calorieQuests = await updateQuestProgress(user, 'workout', workout.caloriesBurned, session);
+                    const countQuests = await updateQuestProgress(user, 'workout_count', 1, session);
+                    const streakQuests = await updateQuestProgress(user, 'streak', user.streakData?.current || 0, session);
+                    const questsCompleted = [...calorieQuests, ...countQuests, ...streakQuests];
+
+                    // Update daily progress
+                    const progress = await Progress.getOrCreateToday(req.user.id, session);
+                    progress.caloriesBurned += workout.caloriesBurned;
+                    progress.xpEarned += workout.xpEarned;
+                    progress.workoutCount += 1;
+                    await progress.save({ session });
+
+                    responseData = {
+                        success: true,
+                        message: 'Workout logged successfully!',
+                        workout: {
+                            id: workout._id,
+                            type: workout.type,
+                            inputType: workout.inputType,
+                            duration: workout.duration,
+                            reps: workout.reps,
+                            sets: workout.sets,
+                            intensity: workout.intensity,
+                            caloriesBurned: workout.caloriesBurned,
+                            xpEarned: workout.xpEarned,
+                            date: workout.date
+                        },
+                        xp: xpResult,
+                        rankUp: rankUp || undefined,
+                        questsCompleted,
+                        user: {
+                            xp: user.xp,
+                            streak: user.streak,
+                            level: user.getLevel()
+                        }
+                    };
+                });
+
+                // Guild XP — outside transaction (frozen feature, non-fatal)
+                try {
+                    const guild = await Guild.findOne({ 'members.user': req.user.id });
+                    if (guild) {
+                        guild.totalXP += responseData.xp.totalXP;
+                        guild.weeklyXP += responseData.xp.totalXP;
+                        await guild.save();
+                    }
+                } catch (guildErr) {
+                    console.error('Guild XP update error (non-fatal):', guildErr.message);
                 }
-            } catch (guildErr) {
-                console.error('Guild XP update error (non-fatal):', guildErr.message);
+
+                res.status(201).json(responseData);
+            } finally {
+                session.endSession();
             }
-
-            // Update daily progress
-            const progress = await Progress.getOrCreateToday(req.user.id);
-            progress.caloriesBurned += workout.caloriesBurned;
-            progress.xpEarned += workout.xpEarned;
-            progress.workoutCount += 1;
-            await progress.save();
-
-            res.status(201).json({
-                success: true,
-                message: 'Workout logged successfully!',
-                workout: {
-                    id: workout._id,
-                    type: workout.type,
-                    inputType: workout.inputType,
-                    duration: workout.duration,
-                    reps: workout.reps,
-                    sets: workout.sets,
-                    intensity: workout.intensity,
-                    caloriesBurned: workout.caloriesBurned,
-                    xpEarned: workout.xpEarned,
-                    date: workout.date
-                },
-                xp: xpResult,
-                rankUp: rankUp || undefined,
-                questsCompleted,
-                user: {
-                    xp: user.xp,
-                    streak: user.streak,
-                    level: user.getLevel()
-                }
-            });
 
         } catch (error) {
             console.error('Create workout error:', error);

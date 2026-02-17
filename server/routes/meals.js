@@ -16,6 +16,7 @@
 
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 const Meal = require('../models/Meal');
 const User = require('../models/User');
@@ -105,50 +106,58 @@ router.post(
 
             const { name, mealType, calories, protein, carbs, fats, fiber } = req.body;
 
-            // Create meal
-            const meal = await Meal.create({
-                userId: req.user.id,
-                name,
-                mealType: mealType || 'snack',
-                calories,
-                protein: protein || 0,
-                carbs: carbs || 0,
-                fats: fats || 0,
-                fiber: fiber || 0
-            });
-
-            // Update daily progress
-            const progress = await Progress.getOrCreateToday(req.user.id);
-            progress.caloriesConsumed += calories;
-            progress.proteinIntake += protein || 0;
-            progress.carbsIntake += carbs || 0;
-            progress.fatsIntake += fats || 0;
-            await progress.save();
-
-            // Update quest progress and analytics
-            let questsCompleted = [];
+            // === Atomic transaction: meal + progress + quests ===
+            const session = await mongoose.startSession();
             try {
-                const user = await User.findById(req.user.id);
-                if (user) {
-                    // Update analytics
-                    if (!user.analytics) user.analytics = {};
-                    user.analytics.totalMealsLogged = (user.analytics.totalMealsLogged || 0) + 1;
-                    await user.save();
+                let responseData;
+                await session.withTransaction(async () => {
+                    // Create meal
+                    const meal = new Meal({
+                        userId: req.user.id,
+                        name,
+                        mealType: mealType || 'snack',
+                        calories,
+                        protein: protein || 0,
+                        carbs: carbs || 0,
+                        fats: fats || 0,
+                        fiber: fiber || 0
+                    });
+                    await meal.save({ session });
 
-                    // Update nutrition quests
-                    await refreshQuests(user);
-                    questsCompleted = await updateQuestProgress(user, 'nutrition', 1);
-                }
-            } catch (questErr) {
-                console.error('Quest update error (non-fatal):', questErr.message);
+                    // Update daily progress
+                    const progress = await Progress.getOrCreateToday(req.user.id, session);
+                    progress.caloriesConsumed += calories;
+                    progress.proteinIntake += protein || 0;
+                    progress.carbsIntake += carbs || 0;
+                    progress.fatsIntake += fats || 0;
+                    await progress.save({ session });
+
+                    // Update quest progress and analytics
+                    let questsCompleted = [];
+                    const user = await User.findById(req.user.id).session(session);
+                    if (user) {
+                        // Update analytics
+                        if (!user.analytics) user.analytics = {};
+                        user.analytics.totalMealsLogged = (user.analytics.totalMealsLogged || 0) + 1;
+                        await user.save({ session });
+
+                        // Update nutrition quests
+                        await refreshQuests(user, session);
+                        questsCompleted = await updateQuestProgress(user, 'nutrition', 1, session);
+                    }
+
+                    responseData = {
+                        success: true,
+                        message: 'Meal logged successfully!',
+                        meal,
+                        questsCompleted,
+                    };
+                });
+
+                res.status(201).json(responseData);
+            } finally {
+                session.endSession();
             }
-
-            res.status(201).json({
-                success: true,
-                message: 'Meal logged successfully!',
-                meal,
-                questsCompleted,
-            });
 
         } catch (error) {
             console.error('Create meal error:', error);

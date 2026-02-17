@@ -288,6 +288,12 @@ router.get('/me', protect, async (req, res) => {
         // req.user is set by the protect middleware
         const user = await User.findById(req.user.id);
 
+        // Lazy migration: existing users who already have workouts skip onboarding
+        if (!user.onboardingComplete && (user.analytics?.totalWorkouts || 0) > 0) {
+            user.onboardingComplete = true;
+            await user.save();
+        }
+
         res.json({
             success: true,
             user: {
@@ -306,7 +312,9 @@ router.get('/me', protect, async (req, res) => {
                 dailyCalorieGoal: user.dailyCalorieGoal,
                 dailyBurnGoal: user.dailyBurnGoal,
                 profilePicture: user.profilePicture || '',
-                level: user.getLevel()  // Using the instance method
+                level: user.getLevel(),
+                onboardingComplete: user.onboardingComplete || false,
+                streakFreezes: user.streakData?.freezesAvailable ?? 1
             }
         });
 

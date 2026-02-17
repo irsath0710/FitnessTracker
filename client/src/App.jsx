@@ -30,6 +30,7 @@ import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import LandingPage from './pages/LandingPage';
 
 // Heavy pages — lazy loaded (code-split) to reduce initial bundle
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
@@ -73,10 +74,22 @@ function PublicRoute({ children }) {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
+}
+
+/**
+ * LandingRoute — shows landing page for guests, redirects to dashboard for logged-in users.
+ */
+function LandingRoute() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) return <LoadingScreen />;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+
+  return <LandingPage />;
 }
 
 /**
@@ -87,6 +100,14 @@ function PublicRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
+      {/* Landing — public, redirects to dashboard if logged in */}
+      <Route
+        path="/"
+        element={
+          <LandingRoute />
+        }
+      />
+
       {/* Public Routes */}
       <Route
         path="/login"
@@ -110,7 +131,7 @@ function AppRoutes() {
 
       {/* Protected Routes */}
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
@@ -166,7 +187,7 @@ function AppRoutes() {
         }
       />
 
-      {/* Catch all - redirect to dashboard */}
+      {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

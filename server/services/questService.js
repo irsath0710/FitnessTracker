@@ -12,7 +12,7 @@ const WEEKLY_QUESTS = 1;
  * Generate daily quests for a user.
  * Called on first API hit of the day (lazy — no cron job needed).
  */
-async function refreshQuests(user) {
+async function refreshQuests(user, session = null) {
     const now = new Date();
 
     // Check if quests are still valid
@@ -38,7 +38,7 @@ async function refreshQuests(user) {
         isActive: true,
         minRank: { $in: eligibleRanks },
         type: 'daily',
-    });
+    }).session(session);
 
     // Weighted random selection
     const selected = weightedSample(questPool, QUESTS_PER_DAY);
@@ -64,7 +64,7 @@ async function refreshQuests(user) {
     // Also refresh weekly quests if none active
     let weeklyQuests = user.activeQuests?.filter(q => q.type === 'weekly' && q.expiresAt > now) || [];
     if (weeklyQuests.length === 0) {
-        const weeklyPool = await Quest.find({ isActive: true, type: 'weekly', minRank: { $in: eligibleRanks } });
+        const weeklyPool = await Quest.find({ isActive: true, type: 'weekly', minRank: { $in: eligibleRanks } }).session(session);
         const selectedWeekly = weightedSample(weeklyPool, WEEKLY_QUESTS);
 
         const endOfWeek = new Date(now);
@@ -86,7 +86,7 @@ async function refreshQuests(user) {
     }
 
     user.activeQuests = [...completedToday, ...dailyQuests, ...weeklyQuests];
-    await user.save();
+    await user.save({ session });
 
     return user.activeQuests;
 }
@@ -98,7 +98,7 @@ async function refreshQuests(user) {
  * @param {number} value - calories burned, meals logged, etc.
  * @returns {Array} completed quests
  */
-async function updateQuestProgress(user, category, value) {
+async function updateQuestProgress(user, category, value, session = null) {
     if (!user.activeQuests?.length) return [];
 
     const completed = [];
@@ -125,31 +125,35 @@ async function updateQuestProgress(user, category, value) {
 
     if (completed.length > 0) {
         user.markModified('activeQuests');
-        await user.save();
+        await user.save({ session });
     }
 
     return completed;
 }
 
 function shouldQuestProgress(quest, category) {
-    const mapping = {
-        'burn_200': 'workout',
-        'burn_300': 'workout',
-        'burn_500': 'workout',
-        'any_workout': 'workout_count',
-        'log_meal': 'nutrition',
-        'log_3_meals': 'nutrition',
-        'weekly_5_workouts': 'workout_count',
-        'weekly_burn_2000': 'workout',
-        'weekly_streak_7': 'streak',
-    };
+    const id = quest.questId;
 
-    const questCategory = mapping[quest.questId];
-    if (!questCategory) return false;
+    // Calorie-burn quests: burn_* (daily) or weekly_burn_* (weekly)
+    if (id.startsWith('burn_') || id.includes('_burn_')) {
+        return category === 'workout';
+    }
 
-    // workout_count quests progress on 'workout_count' category
-    if (questCategory === 'workout_count' && category === 'workout_count') return true;
-    if (questCategory === category) return true;
+    // Workout count quests: *workout* (any_workout, two_workouts, weekly_N_workouts)
+    if (id.includes('workout')) {
+        return category === 'workout_count';
+    }
+
+    // Nutrition quests: log_* (daily) or weekly_N_meals (weekly)
+    if (id.startsWith('log_') || id.includes('_meals')) {
+        return category === 'nutrition';
+    }
+
+    // Streak quests: weekly_streak_*
+    if (id.includes('streak')) {
+        return category === 'streak';
+    }
+
     return false;
 }
 
