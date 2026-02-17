@@ -86,6 +86,10 @@ export const authAPI = {
     register: (userData) => api.post('/auth/register', userData),
     login: (credentials) => api.post('/auth/login', credentials),
     getMe: () => api.get('/auth/me'),
+    verifyEmail: (token) => api.get('/auth/verify-email', { params: { token } }),
+    resendVerification: (email) => api.post('/auth/resend-verification', { email }),
+    forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+    resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
 };
 
 // ============================================
@@ -120,8 +124,6 @@ export const mealAPI = {
     delete: (id) => api.delete(`/meals/${id}`),
     getToday: () => api.get('/meals/today'),
     getWeekly: () => api.get('/meals/weekly'),
-    search: (query) => api.get('/meals/search', { params: { query } }),
-    getCommon: () => api.get('/meals/common'),
 };
 
 // ============================================

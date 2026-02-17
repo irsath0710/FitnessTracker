@@ -159,7 +159,11 @@ export default function Register() {
         const result = await register(payload);
 
         if (result.success) {
-            navigate('/');
+            if (result.needsVerification) {
+                navigate('/verify-email');
+            } else {
+                navigate('/');
+            }
         }
         setLoading(false);
     };

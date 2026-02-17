@@ -27,6 +27,9 @@ import InstallPWA from './components/InstallPWA';
 // Auth pages — small, loaded eagerly for fast first paint
 import Login from './pages/Login';
 import Register from './pages/Register';
+import VerifyEmail from './pages/VerifyEmail';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // Heavy pages — lazy loaded (code-split) to reduce initial bundle
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
@@ -101,6 +104,9 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Protected Routes */}
       <Route

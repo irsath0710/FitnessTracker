@@ -190,6 +190,33 @@ const UserSchema = new mongoose.Schema({
         currentPeriodEnd: Date,
     },
 
+    // Email verification
+    emailVerified: {
+        type: Boolean,
+        default: false
+    },
+
+    verificationToken: {
+        type: String,
+        default: null
+    },
+
+    verificationTokenExpiry: {
+        type: Date,
+        default: null
+    },
+
+    // Password reset
+    resetToken: {
+        type: String,
+        default: null
+    },
+
+    resetTokenExpiry: {
+        type: Date,
+        default: null
+    },
+
     // Timestamps
     createdAt: {
         type: Date,
