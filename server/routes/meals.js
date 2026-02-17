@@ -18,8 +18,10 @@ const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const Meal = require('../models/Meal');
+const User = require('../models/User');
 const Progress = require('../models/Progress');
 const { protect } = require('../middleware/auth');
+const { refreshQuests, updateQuestProgress } = require('../services/questService');
 
 // All meal routes require authentication
 router.use(protect);
@@ -123,10 +125,29 @@ router.post(
             progress.fatsIntake += fats || 0;
             await progress.save();
 
+            // Update quest progress and analytics
+            let questsCompleted = [];
+            try {
+                const user = await User.findById(req.user.id);
+                if (user) {
+                    // Update analytics
+                    if (!user.analytics) user.analytics = {};
+                    user.analytics.totalMealsLogged = (user.analytics.totalMealsLogged || 0) + 1;
+                    await user.save();
+
+                    // Update nutrition quests
+                    await refreshQuests(user);
+                    questsCompleted = await updateQuestProgress(user, 'nutrition', 1);
+                }
+            } catch (questErr) {
+                console.error('Quest update error (non-fatal):', questErr.message);
+            }
+
             res.status(201).json({
                 success: true,
                 message: 'Meal logged successfully!',
-                meal
+                meal,
+                questsCompleted,
             });
 
         } catch (error) {

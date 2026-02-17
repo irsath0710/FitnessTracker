@@ -136,4 +136,33 @@ export const progressAPI = {
     getSummary: (period) => api.get('/progress/summary', { params: { period } }),
 };
 
+// ============================================
+// QUEST API
+// ============================================
+
+export const questAPI = {
+    getAll: () => api.get('/quests'),
+};
+
+// ============================================
+// GUILD API
+// ============================================
+
+export const guildAPI = {
+    create: (data) => api.post('/guilds', data),
+    join: (code) => api.post(`/guilds/join/${code}`),
+    getMine: () => api.get('/guilds/mine'),
+    getLeaderboard: () => api.get('/guilds/leaderboard'),
+    leave: () => api.post('/guilds/leave'),
+};
+
+// ============================================
+// PAYMENT API
+// ============================================
+
+export const paymentAPI = {
+    subscribe: (planType) => api.post('/payments/subscribe', { planType }),
+    getStatus: () => api.get('/payments/status'),
+};
+
 export default api;

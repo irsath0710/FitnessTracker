@@ -235,7 +235,7 @@ export default function Nutrition() {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-green-500/30 border-t-green-500 rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
             </div>
         );
     }
@@ -249,15 +249,15 @@ export default function Nutrition() {
 
             <main className="max-w-xl mx-auto px-4 pt-6 space-y-6">
                 {/* Daily Summary Card */}
-                <Card className="border-green-500/20 bg-gradient-to-br from-green-950/20 to-emerald-950/10">
+                <Card className="border-white/[0.06]">
                     <div className="flex justify-between items-start mb-4">
                         <div>
-                            <div className="text-4xl font-bold font-mono">{caloriesConsumed}</div>
+                            <div className="text-4xl font-bold">{caloriesConsumed}</div>
                             <div className="text-xs text-zinc-400">of {calorieGoal} kcal goal</div>
                         </div>
                         <div className={`text-sm px-4 py-2 rounded-full font-medium ${caloriesConsumed > calorieGoal
                                 ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                                : 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                             }`}>
                             {calorieGoal - caloriesConsumed > 0
                                 ? `${calorieGoal - caloriesConsumed} remaining`
@@ -269,7 +269,7 @@ export default function Nutrition() {
                     {/* Progress bar */}
                     <div className="h-3 bg-zinc-800 rounded-full overflow-hidden mb-6">
                         <div
-                            className={`h-full transition-all duration-500 ${caloriesConsumed > calorieGoal ? 'bg-red-500' : 'bg-gradient-to-r from-green-500 to-emerald-400'
+                            className={`h-full transition-all duration-500 ${caloriesConsumed > calorieGoal ? 'bg-red-500' : 'bg-blue-500'
                                 }`}
                             style={{ width: `${calorieProgress}%` }}
                         />
@@ -280,22 +280,22 @@ export default function Nutrition() {
                         <div className="bg-zinc-800/50 rounded-xl p-3 text-center">
                             <Beef size={18} className="mx-auto mb-1 text-purple-400" />
                             <div className="text-lg font-bold text-purple-400">{summary?.totalProtein || 0}g</div>
-                            <div className="text-[10px] text-zinc-500 uppercase">Protein</div>
+                            <div className="text-[10px] text-zinc-500">Protein</div>
                         </div>
                         <div className="bg-zinc-800/50 rounded-xl p-3 text-center">
                             <Wheat size={18} className="mx-auto mb-1 text-amber-400" />
                             <div className="text-lg font-bold text-amber-400">{summary?.totalCarbs || 0}g</div>
-                            <div className="text-[10px] text-zinc-500 uppercase">Carbs</div>
+                            <div className="text-[10px] text-zinc-500">Carbs</div>
                         </div>
                         <div className="bg-zinc-800/50 rounded-xl p-3 text-center">
                             <Droplet size={18} className="mx-auto mb-1 text-yellow-400" />
                             <div className="text-lg font-bold text-yellow-400">{summary?.totalFats || 0}g</div>
-                            <div className="text-[10px] text-zinc-500 uppercase">Fats</div>
+                            <div className="text-[10px] text-zinc-500">Fats</div>
                         </div>
                         <div className="bg-zinc-800/50 rounded-xl p-3 text-center">
                             <Leaf size={18} className="mx-auto mb-1 text-green-400" />
                             <div className="text-lg font-bold text-green-400">{summary?.totalFiber || 0}g</div>
-                            <div className="text-[10px] text-zinc-500 uppercase">Fiber</div>
+                            <div className="text-[10px] text-zinc-500">Fiber</div>
                         </div>
                     </div>
                 </Card>
@@ -304,14 +304,14 @@ export default function Nutrition() {
                 <Button
                     variant="system"
                     onClick={() => setShowAddModal(true)}
-                    className="w-full bg-gradient-to-r from-purple-600 to-violet-500 hover:from-purple-500 hover:to-violet-400 border-0 text-white"
+                    className="w-full bg-blue-600 hover:bg-blue-500 border-0 text-white"
                 >
                     <Plus size={20} /> Log Food
                 </Button>
 
                 {/* Today's Meals */}
                 <div>
-                    <h3 className="text-xs text-zinc-500 uppercase tracking-wider mb-4">Today's Log</h3>
+                    <h3 className="text-xs text-zinc-500 mb-4">Today's log</h3>
                     {meals.length === 0 ? (
                         <div className="text-center py-16 text-zinc-500">
                             <Utensils size={48} className="mx-auto mb-4 opacity-30" />
@@ -323,10 +323,10 @@ export default function Nutrition() {
                             {meals.map(meal => (
                                 <div
                                     key={meal._id}
-                                    className="flex justify-between items-center p-4 bg-zinc-900/50 rounded-2xl border border-white/5 group hover:border-green-500/20 transition-all"
+                                    className="flex justify-between items-center p-4 bg-zinc-900/50 rounded-2xl border border-white/5 group hover:border-white/10 transition-all"
                                 >
                                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                                        <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500 flex-shrink-0">
+                                        <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-400 flex-shrink-0">
                                             <Utensils size={20} />
                                         </div>
                                         <div className="min-w-0 flex-1">
@@ -340,7 +340,7 @@ export default function Nutrition() {
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <div className="text-right">
-                                            <div className="text-green-400 font-bold">{meal.calories} kcal</div>
+                                            <div className="text-white font-medium">{meal.calories} kcal</div>
                                             <div className="text-[10px] text-zinc-500">
                                                 P:{meal.protein}g C:{meal.carbs}g F:{meal.fats}g
                                             </div>
@@ -392,12 +392,12 @@ export default function Nutrition() {
                                             placeholder="Search for food..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:border-green-500"
+                                            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:border-blue-500"
                                             autoFocus
                                         />
                                         {searching && (
                                             <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                                <div className="w-5 h-5 border-2 border-green-500/30 border-t-green-500 rounded-full animate-spin" />
+                                                <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
                                             </div>
                                         )}
                                     </div>
@@ -406,14 +406,14 @@ export default function Nutrition() {
                                     <div className="flex bg-zinc-800 rounded-lg p-1">
                                         <button
                                             onClick={() => setActiveTab('search')}
-                                            className={`flex-1 py-2 rounded-md text-sm transition-all ${activeTab === 'search' ? 'bg-green-500 text-white' : 'text-zinc-400'
+                                            className={`flex-1 py-2 rounded-md text-sm transition-all ${activeTab === 'search' ? 'bg-blue-600 text-white' : 'text-zinc-400'
                                                 }`}
                                         >
                                             Search Results
                                         </button>
                                         <button
                                             onClick={() => setActiveTab('common')}
-                                            className={`flex-1 py-2 rounded-md text-sm transition-all ${activeTab === 'common' ? 'bg-green-500 text-white' : 'text-zinc-400'
+                                            className={`flex-1 py-2 rounded-md text-sm transition-all ${activeTab === 'common' ? 'bg-blue-600 text-white' : 'text-zinc-400'
                                                 }`}
                                         >
                                             Common Foods
@@ -440,7 +440,7 @@ export default function Nutrition() {
                                                         <div className="flex-1 min-w-0">
                                                             <div className="font-medium truncate">{food.name}</div>
                                                             {food.brand && <div className="text-xs text-zinc-500">{food.brand}</div>}
-                                                            <div className="text-xs text-green-400 mt-0.5">
+                                                            <div className="text-xs text-zinc-400 mt-0.5">
                                                                 {food.nutritionPer100g?.calories || 0} kcal / 100g
                                                             </div>
                                                         </div>
@@ -465,12 +465,12 @@ export default function Nutrition() {
                                                     onClick={() => handleSelectFood(food)}
                                                     className="w-full flex items-center gap-3 p-3 bg-zinc-800/50 hover:bg-zinc-800 rounded-xl text-left transition-all"
                                                 >
-                                                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center text-xl">
+                                                    <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center text-xl">
                                                         🍽️
                                                     </div>
                                                     <div className="flex-1">
                                                         <div className="font-medium">{food.name}</div>
-                                                        <div className="text-xs text-green-400">
+                                                        <div className="text-xs text-zinc-400">
                                                             {food.calories} kcal / {food.unit === 'grams' ? '100g' : `1 ${food.unit.slice(0, -1)}`}
                                                         </div>
                                                     </div>
@@ -485,7 +485,7 @@ export default function Nutrition() {
                                 <div className="p-4 space-y-5">
                                     {/* Selected Food */}
                                     <div className="flex items-center gap-4 p-4 bg-zinc-800/50 rounded-xl">
-                                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center text-2xl">
+                                        <div className="w-16 h-16 rounded-xl bg-zinc-800 flex items-center justify-center text-2xl">
                                             🍽️
                                         </div>
                                         <div>
@@ -497,22 +497,22 @@ export default function Nutrition() {
                                     {/* Quantity & Unit */}
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="block text-xs text-zinc-500 uppercase mb-2">Quantity</label>
+                                            <label className="block text-xs text-zinc-500 mb-2">Quantity</label>
                                             <input
                                                 type="number"
                                                 value={quantity}
                                                 onChange={(e) => setQuantity(Math.max(1, Math.round(parseFloat(e.target.value)) || 1))}
                                                 min="1"
                                                 step="1"
-                                                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white text-lg font-mono focus:outline-none focus:border-green-500"
+                                                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white text-lg focus:outline-none focus:border-blue-500"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-zinc-500 uppercase mb-2">Unit</label>
+                                            <label className="block text-xs text-zinc-500 mb-2">Unit</label>
                                             <select
                                                 value={unit}
                                                 onChange={(e) => setUnit(e.target.value)}
-                                                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500"
+                                                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
                                             >
                                                 <option value="grams">Grams (g)</option>
                                                 <option value="pieces">Pieces</option>
@@ -526,14 +526,14 @@ export default function Nutrition() {
 
                                     {/* Meal Type */}
                                     <div>
-                                        <label className="block text-xs text-zinc-500 uppercase mb-2">Meal Type</label>
+                                        <label className="block text-xs text-zinc-500 mb-2">Meal type</label>
                                         <div className="grid grid-cols-4 gap-2">
                                             {['breakfast', 'lunch', 'dinner', 'snack'].map(type => (
                                                 <button
                                                     key={type}
                                                     onClick={() => setMealType(type)}
                                                     className={`py-2 rounded-xl text-sm capitalize transition-all ${mealType === type
-                                                            ? 'bg-green-500 text-white'
+                                                            ? 'bg-blue-600 text-white'
                                                             : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                                                         }`}
                                                 >
@@ -546,7 +546,7 @@ export default function Nutrition() {
                                     {/* Nutrition Preview */}
                                     {nutrition && (
                                         <div className="bg-zinc-800/50 rounded-xl p-4 space-y-3">
-                                            <h4 className="text-xs text-zinc-500 uppercase">Nutrition</h4>
+                                            <h4 className="text-xs text-zinc-500 mb-3">Nutrition</h4>
                                             <div className="flex justify-between items-center">
                                                 <span className="text-zinc-400 flex items-center gap-2">
                                                     <Flame size={16} className="text-orange-400" /> Calories
@@ -567,7 +567,7 @@ export default function Nutrition() {
                                                     <div className="text-[10px] text-zinc-500">Fats</div>
                                                 </div>
                                                 <div className="text-center">
-                                                    <div className="text-green-400 font-bold">{nutrition.fiber}g</div>
+                                                    <div className="text-zinc-300 font-medium">{nutrition.fiber}g</div>
                                                     <div className="text-[10px] text-zinc-500">Fiber</div>
                                                 </div>
                                             </div>
@@ -592,7 +592,7 @@ export default function Nutrition() {
                                     variant="system"
                                     onClick={handleSubmit}
                                     disabled={submitting || !nutrition?.calories}
-                                    className="flex-1 bg-gradient-to-r from-purple-600 to-violet-500 hover:from-purple-500 hover:to-violet-400 text-white"
+                                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white"
                                 >
                                     {submitting ? 'Adding...' : `Add ${nutrition?.calories || 0} kcal`}
                                 </Button>

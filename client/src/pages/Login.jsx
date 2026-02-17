@@ -1,74 +1,44 @@
-/**
- * ============================================
- * LOGIN PAGE
- * ============================================
- * 
- * 📚 LEARNING NOTES:
- * 
- * FORM HANDLING IN REACT:
- * - useState for form field values
- * - onChange handlers to update state
- * - onSubmit handler for form submission
- * - Controlled components: Input values come from state
- */
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Button, Input } from '../components/ui';
+import { Input } from '../components/ui';
 
 export default function Login() {
     const navigate = useNavigate();
     const { login, error } = useAuth();
-
-    const [formData, setFormData] = useState({
-        identifier: '',
-        password: ''
-    });
+    const [formData, setFormData] = useState({ identifier: '', password: '' });
     const [loading, setLoading] = useState(false);
 
-    // Handle input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-
         const result = await login(formData);
-
-        if (result.success) {
-            navigate('/');
-        }
-
+        if (result.success) navigate('/');
         setLoading(false);
     };
 
     return (
-        <div className="min-h-screen bg-black text-white flex items-center justify-center p-6 relative overflow-hidden">
-            {/* Background Effects */}
-            <div className="absolute top-[-20%] left-[-20%] w-[500px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-[-20%] right-[-20%] w-[500px] h-[500px] bg-purple-600/10 blur-[120px] rounded-full pointer-events-none" />
-
-            <div className="w-full max-w-md z-10">
-                {/* Header */}
-                <div className="mb-12 text-center">
-                    <h1 className="text-6xl font-black italic tracking-tighter mb-4 bg-gradient-to-br from-white to-zinc-500 bg-clip-text text-transparent">
-                        LEVEL UP
+        <div className="min-h-screen bg-[var(--bg-root)] text-white flex items-center justify-center p-6">
+            <div className="w-full max-w-sm animate-fade-up">
+                {/* Brand */}
+                <div className="mb-10 text-center">
+                    <h1 className="text-3xl font-semibold tracking-tight mb-2">
+                        Arc
                     </h1>
-                    <p className="text-zinc-500 tracking-[0.3em] text-xs uppercase border-t border-zinc-800 pt-4">
-                        System Initialization Required
+                    <p className="text-zinc-500 text-sm">
+                        Sign in to your account
                     </p>
                 </div>
 
-                {/* Login Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="bg-zinc-900/50 backdrop-blur-md border border-white/10 p-8 rounded-3xl shadow-2xl">
+                <form onSubmit={handleSubmit}>
+                    <div className="bg-[var(--bg-surface)] border border-white/[0.06] p-6 rounded-2xl">
                         {error && (
-                            <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-4 text-sm">
+                            <div className="bg-red-500/8 border border-red-500/15 text-red-400 px-3.5 py-2.5 rounded-xl mb-4 text-xs">
                                 {error}
                             </div>
                         )}
@@ -76,7 +46,7 @@ export default function Login() {
                         <Input
                             label="Email or Username"
                             name="identifier"
-                            placeholder="player@example.com"
+                            placeholder="you@example.com"
                             value={formData.identifier}
                             onChange={handleChange}
                             required
@@ -94,15 +64,22 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full mt-4 py-4 px-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-emerald-600 to-green-500 text-white hover:from-emerald-500 hover:to-green-400 transition-all shadow-lg shadow-emerald-900/50 disabled:opacity-50"
+                            className="w-full mt-5 py-3 px-6 rounded-xl font-medium text-sm bg-blue-600 text-white hover:bg-blue-500 transition-colors active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
                         >
-                            {loading ? 'Connecting...' : 'ACCESS SYSTEM'}
+                            {loading ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                    Signing in...
+                                </span>
+                            ) : (
+                                'Sign in'
+                            )}
                         </button>
 
-                        <p className="text-center text-sm text-zinc-500 mt-6">
-                            New Player?{' '}
-                            <Link to="/register" className="text-blue-400 hover:text-blue-300 transition-colors">
-                                Create Account
+                        <p className="text-center text-xs text-zinc-500 mt-5">
+                            Don&apos;t have an account?{' '}
+                            <Link to="/register" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
+                                Create account
                             </Link>
                         </p>
                     </div>
