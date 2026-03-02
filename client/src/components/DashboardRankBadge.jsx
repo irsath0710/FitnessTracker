@@ -22,7 +22,7 @@ const RANK_COLORS = {
     NATIONAL: '#8B5CF6',
 };
 
-export default function DashboardRankBadge({ xp = 0, streak = 0 }) {
+export default function DashboardRankBadge({ xp = 0, streak = 0, rankUp = false }) {
     const level = calculateLevel(xp);
     const nextLevel = getNextLevel(xp);
     const xpInLevel = xp - level.minXp;
@@ -75,7 +75,7 @@ export default function DashboardRankBadge({ xp = 0, streak = 0 }) {
                 {/* Rank letter centered */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span
-                        className="text-4xl font-bold tracking-tight leading-none"
+                        className={`text-4xl font-bold tracking-tight leading-none${rankUp ? ' animate-rank-shimmer' : ''}`}
                         style={{ color }}
                     >
                         {level.rank}
@@ -86,6 +86,14 @@ export default function DashboardRankBadge({ xp = 0, streak = 0 }) {
                     >
                         {level.label}
                     </span>
+                    {rankUp && (
+                        <span
+                            className="text-[9px] font-bold tracking-wider mt-0.5 animate-rank-label"
+                            style={{ color }}
+                        >
+                            RANK UP!
+                        </span>
+                    )}
                 </div>
             </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Flame, Utensils, Dumbbell, Trophy, Crown, Medal, Shield } from 'lucide-react';
 
@@ -7,6 +7,7 @@ import WeeklyChart from '../components/WeeklyChart';
 import QuestCard from '../components/QuestCard';
 import AnimatedCounter from '../components/AnimatedCounter';
 import OnboardingHero from '../components/OnboardingHero';
+import TodaysMission from '../components/TodaysMission';
 import { useAuth } from '../context/AuthContext';
 import { useDataCache } from '../context/DataCacheContext';
 import { userAPI, questAPI, workoutAPI } from '../services/api';
@@ -26,6 +27,34 @@ export default function Dashboard() {
     const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
     const [quests, setQuests] = useState([]);
     const [quickLogging, setQuickLogging] = useState(false);
+
+    // ─── Celebration detection (XP increase / rank up) ───
+    const prevXpRef = useRef(user?.xp || 0);
+    const prevRankRef = useRef(calculateLevel(user?.xp || 0).rank);
+    const [xpGlow, setXpGlow] = useState(false);
+    const [rankUp, setRankUp] = useState(false);
+
+    useEffect(() => {
+        const prev = prevXpRef.current;
+        const curr = user?.xp || 0;
+        prevXpRef.current = curr;
+        if (curr > prev && prev > 0) {
+            setXpGlow(true);
+            const t = setTimeout(() => setXpGlow(false), 850);
+            return () => clearTimeout(t);
+        }
+    }, [user?.xp]);
+
+    useEffect(() => {
+        const prev = prevRankRef.current;
+        const curr = calculateLevel(user?.xp || 0).rank;
+        prevRankRef.current = curr;
+        if (curr !== prev && prev) {
+            setRankUp(true);
+            const t = setTimeout(() => setRankUp(false), 1000);
+            return () => clearTimeout(t);
+        }
+    }, [user?.xp]);
 
     const QUICK_LOG_PRESETS = [
         { type: 'walking', duration: 30, intensity: 'moderate', label: '30m Walk', icon: '🚶' },
@@ -213,7 +242,7 @@ export default function Dashboard() {
                         <span className="text-[11px] text-zinc-500 font-medium">Level {level.rank} → {nextLevel?.rank || 'Max'}</span>
                         <span className="text-[11px] text-zinc-600 tabular-nums">{xpInLevel}/{xpForNext}</span>
                     </div>
-                    <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
+                    <div className={`h-1 bg-white/[0.06] rounded-full overflow-hidden${xpGlow ? ' animate-xp-glow' : ''}`}>
                         <div className="h-full bg-blue-500 rounded-full animate-progress-fill" style={{ width: `${Math.min((xpInLevel / xpForNext) * 100, 100)}%` }} />
                     </div>
                 </div>
@@ -223,27 +252,40 @@ export default function Dashboard() {
                     <OnboardingHero stats={stats} quests={quests} />
                 )}
 
-                {/* ─── Active Goals ─── */}
+                {/* ─── Today's Mission ─── */}
                 {quests.length > 0 && (
-                    <div className="animate-fade-up-d1">
-                        <Card>
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-[13px] font-medium text-zinc-400">Active goals</h3>
-                                <span className="text-[11px] text-zinc-600 tabular-nums">{quests.filter(q => q.completed).length}/{quests.length}</span>
-                            </div>
-                            <div className="space-y-2">
-                                {quests.slice(0, 3).map((quest, idx) => (
-                                    <QuestCard key={quest.questId || idx} quest={quest} compact />
-                                ))}
-                            </div>
-                            {quests.length > 3 && (
-                                <button onClick={() => navigate('/quests')} className="w-full mt-3 text-xs text-blue-400 hover:text-blue-300 transition-colors text-center py-1">
-                                    View all goals →
-                                </button>
-                            )}
-                        </Card>
-                    </div>
+                    <TodaysMission quests={quests} />
                 )}
+
+                {/* ─── Active Goals ─── */}
+                {quests.length > 0 && (() => {
+                    const allComplete = quests.every(q => q.completed);
+                    const missionId = !allComplete
+                        ? quests.filter(q => !q.completed).sort((a, b) => (b.xpReward || 0) - (a.xpReward || 0))[0]?.questId
+                        : null;
+                    const remaining = quests.filter(q => q.questId !== missionId);
+                    if (remaining.length === 0) return null;
+                    return (
+                        <div className="animate-fade-up-d1">
+                            <Card>
+                                <div className="flex items-center justify-between mb-3">
+                                    <h3 className="text-[13px] font-medium text-zinc-400">Active goals</h3>
+                                    <span className="text-[11px] text-zinc-600 tabular-nums">{quests.filter(q => q.completed).length}/{quests.length}</span>
+                                </div>
+                                <div className="space-y-2">
+                                    {remaining.slice(0, 3).map((quest, idx) => (
+                                        <QuestCard key={quest.questId || idx} quest={quest} compact />
+                                    ))}
+                                </div>
+                                {remaining.length > 3 && (
+                                    <button onClick={() => navigate('/quests')} className="w-full mt-3 text-xs text-blue-400 hover:text-blue-300 transition-colors text-center py-1">
+                                        View all goals →
+                                    </button>
+                                )}
+                            </Card>
+                        </div>
+                    );
+                })()}
 
                 {/* ─── Quick Log ─── */}
                 <div className="animate-fade-up-d2">
@@ -269,7 +311,7 @@ export default function Dashboard() {
                 <div className="animate-fade-up-d3 grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 items-start">
                     {/* Rank Badge */}
                     <div className="rounded-2xl border border-white/[0.05] bg-[var(--bg-surface)] flex items-center justify-center md:w-[200px]">
-                        <DashboardRankBadge xp={user?.xp || 0} streak={user?.streak || 0} />
+                        <DashboardRankBadge xp={user?.xp || 0} streak={user?.streak || 0} rankUp={rankUp} />
                     </div>
 
                     {/* Core Stats */}
