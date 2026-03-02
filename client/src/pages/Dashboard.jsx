@@ -304,6 +304,12 @@ export default function Dashboard() {
                                 </button>
                             ))}
                         </div>
+                        <button
+                            onClick={() => navigate('/nutrition')}
+                            className="w-full mt-3 flex items-center justify-center gap-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors py-1.5 border-t border-white/[0.04]"
+                        >
+                            <Utensils size={13} /> Log Meal →
+                        </button>
                     </Card>
                 </div>
 
