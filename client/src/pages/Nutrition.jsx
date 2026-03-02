@@ -78,6 +78,9 @@ export default function Nutrition() {
     const [notification, setNotification] = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
+    /* Meal-type tab state — user picks once, all quick-adds use it */
+    const [quickMealType, setQuickMealType] = useState(defaultMealType);
+
     /* Custom form state */
     const [showCustom, setShowCustom] = useState(false);
     const [custom, setCustom] = useState({ name: '', calories: '', protein: '', carbs: '', fat: '', mealType: defaultMealType() });
@@ -129,7 +132,7 @@ export default function Nutrition() {
     };
 
     const handleQuickAdd = (food) => {
-        logMeal(food.name, food.cal, food.p, food.c, food.f);
+        logMeal(food.name, food.cal, food.p, food.c, food.f, quickMealType);
     };
 
     const handleCustomSubmit = (e) => {
@@ -225,7 +228,25 @@ export default function Nutrition() {
 
                 {/* ── Quick-add grid ───────────────────── */}
                 <section>
-                    <h3 className="text-xs text-zinc-500 mb-3">Quick add</h3>
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-xs text-zinc-500">Quick add</h3>
+                        {/* Meal-type strip — set once, all quick-adds use it */}
+                        <div className="flex gap-1">
+                            {['breakfast', 'lunch', 'dinner', 'snack'].map(type => (
+                                <button
+                                    key={type}
+                                    onClick={() => setQuickMealType(type)}
+                                    className={`text-[10px] font-medium px-2 py-1 rounded-lg capitalize transition-all ${
+                                        quickMealType === type
+                                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                                            : 'text-zinc-500 hover:text-zinc-300 border border-transparent'
+                                    }`}
+                                >
+                                    {type}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {QUICK_FOODS.map((food, i) => (
                             <button
