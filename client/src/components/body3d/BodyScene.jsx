@@ -64,8 +64,8 @@ function StudioLights() {
     <>
       {/* KEY — warm directional */}
       <directionalLight
-        position={[5, 8, 5]}
-        intensity={2.5}
+        position={[4, 8, 4]}
+        intensity={3.0}
         color="#ffeedd"
         castShadow
         shadow-mapSize={[2048, 2048]}
@@ -74,13 +74,13 @@ function StudioLights() {
         shadow-camera-right={3}
         shadow-camera-top={3}
         shadow-camera-bottom={-3}
-        shadow-bias={-0.0002}
-        shadow-normalBias={0.02}
+        shadow-bias={-0.0001}
+        shadow-normalBias={0.03}
       />
       {/* FILL — cool, softer */}
-      <directionalLight position={[-5, 5, -3]} intensity={0.9} color="#b0c4ff" />
+      <directionalLight position={[-5, 5, -3]} intensity={0.7} color="#b0c4ff" />
       {/* RIM — blue backlight for edge definition */}
-      <directionalLight position={[0, 4, -7]} intensity={1.8} color="#4488ff" />
+      <directionalLight position={[0, 4, -7]} intensity={2.2} color="#4488ff" />
       {/* Secondary fill */}
       <directionalLight position={[-3, 2, -4]} intensity={0.6} color="#6677cc" />
       {/* Ambient fill */}
@@ -185,8 +185,8 @@ export default function BodyScene({ children, className = '' }) {
       >
         <PerspectiveCamera
           makeDefault
-          position={[0, 0.15, 3.6]}
-          fov={30}
+          position={[0.4, 0.2, 3.0]}
+          fov={32}
           near={0.1}
           far={50}
         />
@@ -198,9 +198,9 @@ export default function BodyScene({ children, className = '' }) {
 
         <ContactShadows
           position={[0, -1.0, 0]}
-          opacity={0.7}
-          scale={4}
-          blur={3}
+          opacity={0.85}
+          scale={5}
+          blur={2.5}
           far={3}
           color="#000000"
           frames={1}

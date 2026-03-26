@@ -29,19 +29,20 @@ const fatNorm = (bf) => Math.max(0, Math.min(1, (bf - 10) / 20));
 function createSkinMaterial() {
   return new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#c9957a'),
-    roughness: 0.48,
-    metalness: 0.01,
-    clearcoat: 0.15,
-    clearcoatRoughness: 0.5,
-    sheen: 0.4,
-    sheenRoughness: 0.4,
+    roughness: 0.6,
+    metalness: 0.1,
+    clearcoat: 0.12,
+    clearcoatRoughness: 0.6,
+    sheen: 0.35,
+    sheenRoughness: 0.5,
     sheenColor: new THREE.Color('#ffccaa'),
-    thickness: 1.0,
+    thickness: 1.2,
     attenuationColor: new THREE.Color('#ff8866'),
-    attenuationDistance: 0.6,
-    envMapIntensity: 1.4,
+    attenuationDistance: 0.5,
+    envMapIntensity: 1.6,
     emissive: new THREE.Color('#ff3300'),
     emissiveIntensity: 0,
+    flatShading: false,
     side: THREE.FrontSide,
   });
 }
@@ -104,6 +105,11 @@ export default function HumanModel({
       child.castShadow = true;
       child.receiveShadow = true;
       child.frustumCulled = false;
+
+      // Compute smooth vertex normals to eliminate faceted appearance
+      if (child.geometry) {
+        child.geometry.computeVertexNormals();
+      }
 
       const origMap = child.material?.map;
       const origNormal = child.material?.normalMap;

@@ -10,6 +10,15 @@ const NAV_ITEMS = [
     { path: '/profile', icon: User, label: 'Profile' },
 ];
 
+function isActive(pathname, path) {
+    // Home: match both '/' and '/dashboard'
+    if (path === '/dashboard') {
+        return pathname === '/' || pathname === '/dashboard';
+    }
+    // Other routes: match exact or starts with path + '/'
+    return pathname === path || pathname.startsWith(path + '/');
+}
+
 export default function NavBar() {
     const navigate = useNavigate();
     const { pathname } = useLocation();
@@ -18,7 +27,7 @@ export default function NavBar() {
         <nav className="fixed bottom-0 left-0 right-0 z-50 pb-[env(safe-area-inset-bottom)]">
             <div className="bg-[var(--bg-root)]/95 backdrop-blur-xl border-t border-white/[0.06] px-2 py-1.5 flex items-center justify-around max-w-lg mx-auto">
                 {NAV_ITEMS.map(({ path, icon: Icon, label }) => {
-                    const active = pathname === path;
+                    const active = isActive(pathname, path);
                     return (
                         <button
                             key={path}

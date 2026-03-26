@@ -27,10 +27,6 @@ import InstallPWA from './components/InstallPWA';
 // Auth pages — small, loaded eagerly for fast first paint
 import Login from './pages/Login';
 import Register from './pages/Register';
-import VerifyEmail from './pages/VerifyEmail';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import LandingPage from './pages/LandingPage';
 
 // Heavy pages — lazy loaded (code-split) to reduce initial bundle
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
@@ -74,22 +70,10 @@ function PublicRoute({ children }) {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;
-}
-
-/**
- * LandingRoute — shows landing page for guests, redirects to dashboard for logged-in users.
- */
-function LandingRoute() {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) return <LoadingScreen />;
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
-
-  return <LandingPage />;
 }
 
 /**
@@ -100,14 +84,6 @@ function LandingRoute() {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Landing — public, redirects to dashboard if logged in */}
-      <Route
-        path="/"
-        element={
-          <LandingRoute />
-        }
-      />
-
       {/* Public Routes */}
       <Route
         path="/login"
@@ -125,13 +101,10 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
-      <Route path="/verify-email" element={<VerifyEmail />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Protected Routes */}
       <Route
-        path="/dashboard"
+        path="/"
         element={
           <ProtectedRoute>
             <Dashboard />
@@ -187,7 +160,7 @@ function AppRoutes() {
         }
       />
 
-      {/* Catch all - redirect to landing */}
+      {/* Catch all - redirect to dashboard */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

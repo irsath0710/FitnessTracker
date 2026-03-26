@@ -32,10 +32,17 @@ const { protect, generateToken } = require('../middleware/auth');
 // Lazy-init Resend — allows server to start without RESEND_API_KEY in dev
 let _resend;
 function getResend() {
-    if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
+    if (!process.env.RESEND_API_KEY) return null;
+    if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
     return _resend;
 }
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+
+if (process.env.RESEND_API_KEY) {
+    console.log('Resend email system initialized');
+} else {
+    console.warn('⚠  RESEND_API_KEY missing — email sending disabled');
+}
 
 /**
  * @route   POST /api/auth/register
@@ -114,10 +121,13 @@ router.post(
                 verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
             });
 
-            // Send verification email
+            // Send verification email (fire-and-forget — never blocks registration)
             const verifyUrl = `${CLIENT_URL}/verify-email?token=${rawToken}`;
-            try {
-                await getResend().emails.send({
+            const resendClient = getResend();
+            if (!resendClient) {
+                console.warn('Skipping verification email — RESEND_API_KEY not configured');
+            } else {
+                resendClient.emails.send({
                     from: process.env.EMAIL_FROM || 'FitnessTracker <noreply@resend.dev>',
                     to: email,
                     subject: 'Verify your FitnessTracker account',
@@ -129,9 +139,7 @@ router.post(
                             <p style="color:#888;font-size:13px">This link expires in 24 hours. If you didn't create an account, ignore this email.</p>
                         </div>
                     `,
-                });
-            } catch (emailErr) {
-                console.error('Verification email failed (non-fatal):', emailErr.message);
+                }).catch(err => console.error('Verification email failed (non-fatal):', err.message));
             }
 
             // Send response (no JWT — user must verify first)
@@ -469,8 +477,11 @@ router.post('/forgot-password', async (req, res) => {
         await user.save();
 
         const resetUrl = `${CLIENT_URL}/reset-password?token=${rawToken}`;
-        try {
-            await getResend().emails.send({
+        const resendClient = getResend();
+        if (!resendClient) {
+            console.warn('Skipping password reset email — RESEND_API_KEY not configured');
+        } else {
+            resendClient.emails.send({
                 from: process.env.EMAIL_FROM || 'FitnessTracker <noreply@resend.dev>',
                 to: user.email,
                 subject: 'Reset your FitnessTracker password',
@@ -482,9 +493,7 @@ router.post('/forgot-password', async (req, res) => {
                         <p style="color:#888;font-size:13px">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
                     </div>
                 `,
-            });
-        } catch (emailErr) {
-            console.error('Password reset email failed:', emailErr.message);
+            }).catch(err => console.error('Password reset email failed:', err.message));
         }
 
         res.json({ success: true, message: genericMsg });

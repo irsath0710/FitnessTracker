@@ -10,8 +10,8 @@
  * - XP and streak stats
  */
 
-import React, { useState, useEffect } from 'react';
-import { LogOut, Save, Target, TrendingUp, TrendingDown, Scale, Ruler, User, Flame, Zap, Camera, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { LogOut, Save, Target, TrendingUp, TrendingDown, Scale, Ruler, User, Flame, Zap, Camera, Check, Pencil, Upload, Trash2, X, Image } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { userAPI } from '../services/api';
 import { Card, Button, Toast } from '../components/ui';
@@ -33,7 +33,8 @@ export default function Profile() {
     const [notification, setNotification] = useState(null);
     const [activeTab, setActiveTab] = useState('metrics'); // 'metrics' or 'goals'
     const [profilePicture, setProfilePicture] = useState(user?.profilePicture || '');
-    const fileInputRef = React.useRef(null);
+    const [showPictureModal, setShowPictureModal] = useState(false);
+    const fileInputRef = useRef(null);
 
     const [formData, setFormData] = useState({
         weight: user?.weight || 70,
@@ -95,10 +96,23 @@ export default function Profile() {
                     ? canvas.toDataURL('image/webp', 0.7)
                     : canvas.toDataURL('image/jpeg', 0.7);
                 setProfilePicture(base64);
+                setShowPictureModal(false);
             };
             img.src = event.target.result;
         };
         reader.readAsDataURL(file);
+    };
+
+    // Handle selecting a default avatar
+    const handleSelectAvatar = (avatarSrc) => {
+        setProfilePicture(avatarSrc);
+        setShowPictureModal(false);
+    };
+
+    // Handle deleting profile picture
+    const handleDeletePicture = () => {
+        setProfilePicture('');
+        setShowPictureModal(false);
     };
 
     const handleSave = async () => {
@@ -159,19 +173,22 @@ export default function Profile() {
             <main className="max-w-xl mx-auto px-4 pt-8 space-y-6">
                 {/* Profile Header */}
                 <div className="text-center mb-8 relative">
-                    <div
-                        className="w-28 h-28 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 mx-auto mb-4 border-4 border-zinc-900 shadow-2xl relative z-10 flex items-center justify-center cursor-pointer group overflow-hidden"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        {profilePicture ? (
-                            <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
-                        ) : (
-                            <User size={48} className="text-white/80" />
-                        )}
-                        {/* Camera overlay on hover */}
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Camera size={24} className="text-white" />
+                    <div className="relative inline-block">
+                        <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 border-4 border-zinc-900 shadow-2xl relative z-10 flex items-center justify-center overflow-hidden">
+                            {profilePicture ? (
+                                <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <User size={48} className="text-white/80" />
+                            )}
                         </div>
+                        {/* Edit Button */}
+                        <button
+                            onClick={() => setShowPictureModal(true)}
+                            className="absolute bottom-0 right-0 z-20 w-9 h-9 rounded-full bg-blue-600 border-2 border-zinc-900 flex items-center justify-center text-white hover:bg-blue-500 transition-colors shadow-lg"
+                            title="Edit profile picture"
+                        >
+                            <Pencil size={14} />
+                        </button>
                     </div>
                     <input
                         ref={fileInputRef}
@@ -180,23 +197,67 @@ export default function Profile() {
                         onChange={handlePictureChange}
                         className="hidden"
                     />
-                    {/* Default Avatar Picker - only show if no profile picture is saved */}
-                    {!user?.profilePicture && (
-                        <>
-                            {/* Default Avatar Picker - only show if no profile picture is saved */}
-                            {!user?.profilePicture && (
-                                <>
-                                    {/* Default Avatar Picker */}
-                                    <div className="flex items-center justify-center gap-2 mt-2 mb-3">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 bg-blue-500/10 blur-xl rounded-full z-0" />
+                    <h2 className="text-3xl font-bold mb-1 mt-4">{user?.username}</h2>
+                    <p className="text-zinc-400 text-xs bg-white/[0.04] inline-block px-3 py-1 rounded-full border border-white/[0.06]">
+                        Level {level.rank} · {(user?.xp || 0).toLocaleString()} pts
+                    </p>
+                </div>
+
+                {/* Profile Picture Edit Modal */}
+                {showPictureModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+                        <div className="w-full max-w-sm bg-zinc-900 rounded-2xl border border-white/[0.08] overflow-hidden shadow-2xl">
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+                                <h3 className="text-lg font-semibold text-white">Edit Profile Picture</h3>
+                                <button
+                                    onClick={() => setShowPictureModal(false)}
+                                    className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/[0.1] transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            {/* Modal Content */}
+                            <div className="p-5 space-y-5">
+                                {/* Action Buttons */}
+                                <div className="space-y-2">
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 hover:bg-blue-600/30 transition-colors"
+                                    >
+                                        <Upload size={20} />
+                                        <span className="font-medium">Upload from Device</span>
+                                    </button>
+
+                                    {profilePicture && (
+                                        <button
+                                            onClick={handleDeletePicture}
+                                            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-red-600/10 border border-red-500/20 text-red-400 hover:bg-red-600/20 transition-colors"
+                                        >
+                                            <Trash2 size={20} />
+                                            <span className="font-medium">Remove Picture</span>
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Built-in Avatars */}
+                                <div>
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Image size={14} className="text-zinc-500" />
+                                        <span className="text-xs text-zinc-500 font-medium tracking-wide">Or choose an avatar</span>
+                                    </div>
+                                    <div className="grid grid-cols-6 gap-2">
                                         {DEFAULT_AVATARS.map((avatar) => (
                                             <button
                                                 key={avatar.id}
-                                                type="button"
-                                                onClick={() => setProfilePicture(avatar.src)}
-                                                className={`relative w-10 h-10 rounded-full overflow-hidden border-2 transition-all ${profilePicture === avatar.src
-                                                    ? 'border-blue-500 ring-2 ring-blue-500/40 scale-110'
-                                                    : 'border-zinc-700 hover:border-zinc-400 hover:scale-105'
-                                                    }`}
+                                                onClick={() => handleSelectAvatar(avatar.src)}
+                                                className={`relative aspect-square rounded-full overflow-hidden border-2 transition-all ${
+                                                    profilePicture === avatar.src
+                                                        ? 'border-blue-500 ring-2 ring-blue-500/40 scale-105'
+                                                        : 'border-zinc-700 hover:border-zinc-500 hover:scale-105'
+                                                }`}
                                                 title={avatar.name}
                                             >
                                                 <img src={avatar.src} alt={avatar.name} className="w-full h-full object-cover" />
@@ -208,17 +269,11 @@ export default function Profile() {
                                             </button>
                                         ))}
                                     </div>
-                                    <p className="text-[10px] text-zinc-600 mb-2">Pick an avatar or click above to upload</p>
-                                </>
-                            )}
-                        </>
-                    )}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 bg-blue-500/10 blur-xl rounded-full z-0" />
-                    <h2 className="text-3xl font-bold mb-1">{user?.username}</h2>
-                    <p className="text-zinc-400 text-xs bg-white/[0.04] inline-block px-3 py-1 rounded-full border border-white/[0.06]">
-                        Level {level.rank} · {(user?.xp || 0).toLocaleString()} pts
-                    </p>
-                </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Stats Card */}
                 <Card className="border-white/[0.06]">
